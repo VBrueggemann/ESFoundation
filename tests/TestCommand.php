@@ -14,7 +14,7 @@ class TestCommand extends Command
         parent::__construct($payload);
     }
 
-    protected function rules()
+    public function rules()
     {
         return $this->rules;
     }

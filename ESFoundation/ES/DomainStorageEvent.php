@@ -5,6 +5,7 @@ namespace ESFoundation\ES;
 class DomainStorageEvent extends StorageEvent
 {
     protected $aggregateRootId;
+    protected $payload;
     public $class;
 
     /**
@@ -18,9 +19,10 @@ class DomainStorageEvent extends StorageEvent
      */
     public function __construct($aggregateRootId, $id, $createdAt, $playhead, $payload, $class)
     {
-        parent::__construct($id, $createdAt, $playhead, $payload);
+        parent::__construct($id, $createdAt, $playhead);
 
         $this->aggregateRootId = $aggregateRootId;
+        $this->payload = $payload;
         $this->class = $class;
     }
 
@@ -30,5 +32,13 @@ class DomainStorageEvent extends StorageEvent
     public function getAggregateRootId()
     {
         return $this->aggregateRootId;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPayload()
+    {
+        return $this->payload;
     }
 }

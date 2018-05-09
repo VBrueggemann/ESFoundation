@@ -2,27 +2,24 @@
 
 namespace ESFoundation\ES;
 
-class StorageEvent
+abstract class StorageEvent
 {
     protected $id;
     protected $createdAt;
     protected $playhead;
-    protected $payload;
 
     /**
      * StorageEvent constructor.
      * @param $id
      * @param $createdAt
      * @param $playhead
-     * @param $payload
-     * @param $class
+     * @internal param $class
      */
-    public function __construct($id, $createdAt, $playhead, $payload)
+    public function __construct($id, $createdAt, $playhead)
     {
         $this->id = $id;
         $this->createdAt = $createdAt;
         $this->playhead = $playhead;
-        $this->payload = $payload;
     }
 
     /**
@@ -47,13 +44,5 @@ class StorageEvent
     public function getPlayhead()
     {
         return $this->playhead;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getPayload()
-    {
-        return $this->payload;
     }
 }

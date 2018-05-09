@@ -1,5 +1,8 @@
 <?php
 
+use ESFoundation\ES\ValueObjects\AggregateRootId;
+use ESFoundation\ES\ValueObjects\DomainEventId;
+
 class EventIntegrationTest extends TestCase
 {
     /**
@@ -49,9 +52,9 @@ class EventIntegrationTest extends TestCase
      */
     public function an_events_payload_is_unserializable()
     {
-        $aggregateRootId = new \ESFoundation\ES\ValueObjects\AggregateRootId(\Ramsey\Uuid\Uuid::uuid4()->toString());
+        $aggregateRootId = new AggregateRootId(\Ramsey\Uuid\Uuid::uuid4()->toString());
 
-        $id = new \ESFoundation\ES\ValueObjects\AggregateRootId(\Ramsey\Uuid\Uuid::uuid4()->toString());
+        $id = new DomainEventId(\Ramsey\Uuid\Uuid::uuid4()->toString());
 
         $createdAt = \Illuminate\Support\Carbon::now();
 

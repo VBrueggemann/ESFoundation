@@ -2,6 +2,10 @@
 
 namespace ESFoundation\ES;
 
+use ESFoundation\ES\ValueObjects\AggregateRootId;
+use ESFoundation\ES\ValueObjects\DomainEventId;
+use Illuminate\Support\Carbon;
+
 class DomainStorageEvent extends StorageEvent
 {
     protected $aggregateRootId;
@@ -17,7 +21,7 @@ class DomainStorageEvent extends StorageEvent
      * @param $payload
      * @param $class
      */
-    public function __construct($aggregateRootId, $id, $createdAt, $playhead, $payload, $class)
+    public function __construct(AggregateRootId $aggregateRootId, DomainEventId $id, Carbon $createdAt, int $playhead, $payload, string $class)
     {
         parent::__construct($id, $createdAt, $playhead);
 

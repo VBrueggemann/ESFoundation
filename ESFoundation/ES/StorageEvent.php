@@ -2,6 +2,9 @@
 
 namespace ESFoundation\ES;
 
+use ESFoundation\ES\ValueObjects\DomainEventId;
+use Illuminate\Support\Carbon;
+
 abstract class StorageEvent
 {
     protected $id;
@@ -15,7 +18,7 @@ abstract class StorageEvent
      * @param $playhead
      * @internal param $class
      */
-    public function __construct($id, $createdAt, $playhead)
+    public function __construct(DomainEventId $id, Carbon $createdAt, int $playhead)
     {
         $this->id = $id;
         $this->createdAt = $createdAt;

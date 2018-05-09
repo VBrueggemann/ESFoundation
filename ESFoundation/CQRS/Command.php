@@ -4,8 +4,9 @@ namespace ESFoundation\CQRS;
 
 use ESFoundation\CQRS\Errors\InvalidCommandPayloadException;
 use ESFoundation\Traits\Payloadable;
+use ESFoundation\Traits\PayloadableContract;
 
-abstract class Command
+abstract class Command implements PayloadableContract
 {
     use Payloadable;
 

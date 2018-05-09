@@ -4,9 +4,10 @@ namespace ESFoundation\ES;
 use ESFoundation\ES\Errors\InvalidEventPayloadException;
 use ESFoundation\ES\ValueObjects\AggregateRootId;
 use ESFoundation\Traits\Payloadable;
+use ESFoundation\Traits\PayloadableContract;
 use Ramsey\Uuid\Uuid;
 
-abstract class DomainEvent extends StorageEvent
+abstract class DomainEvent extends StorageEvent implements PayloadableContract
 {
 
     use Payloadable;
@@ -26,12 +27,12 @@ abstract class DomainEvent extends StorageEvent
         $this->setPayload($payload, InvalidEventPayloadException::class);
     }
 
-    public function serialize()
+    public function serializePayload()
     {
         return serialize($this->payload->toJson());
     }
 
-    public static function deserialize(DomainStorageEvent $event)
+    public static function deserializePayload(DomainStorageEvent $event)
     {
         $domainEvent = new $event->class(
             new AggregateRootId($event->getAggregateRootId()),

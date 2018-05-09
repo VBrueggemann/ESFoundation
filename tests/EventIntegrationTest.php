@@ -41,7 +41,7 @@ class EventIntegrationTest extends TestCase
             $payload
         );
 
-        $this->assertEquals(serialize($payload->toJson()), $event->serialize());
+        $this->assertEquals(serialize($payload->toJson()), $event->serializePayload());
     }
 
     /**
@@ -69,7 +69,7 @@ class EventIntegrationTest extends TestCase
             \tests\TestEvent::class
         );
 
-        $domainEvent = \ESFoundation\ES\DomainEvent::deserialize($domainStorageEvent);
+        $domainEvent = \ESFoundation\ES\DomainEvent::deserializePayload($domainStorageEvent);
 
         $this->assertEquals($domainEvent->first, 'one');
         $this->assertEquals($domainEvent->second, 'two');

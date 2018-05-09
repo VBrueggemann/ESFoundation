@@ -5,13 +5,9 @@ use ESFoundation\ES\ValueObjects\AggregateRootId;
 use Illuminate\Support\Facades\Validator;
 use Ramsey\Uuid\Uuid;
 
-abstract class DomainEvent
+abstract class DomainEvent extends StorageEvent
 {
     protected $aggregateRootId;
-    protected $playhead;
-    protected $createdAt;
-    protected $payload;
-    protected $id;
 
     /**
      * DomainEvent constructor.
@@ -46,15 +42,18 @@ abstract class DomainEvent
 
     public function serialize()
     {
-        return serialize($this->payload);
+        return serialize($this->payload->toJson());
     }
 
-    public static function deserialize(EventStoragage $event)
+    public static function deserialize(DomainStorageEvent $event)
     {
-        $domainEvent = new $event->class(new AggregateRootId($event->aggregateRootId), unserialize($event->payload));
-        $domainEvent->playhead = $event->playhead;
-        $domainEvent->createdAt = $event->createdAt;
-        $domainEvent->id = $event->id;
+        $domainEvent = new $event->class(
+            new AggregateRootId($event->getAggregateRootId()),
+            collect(json_decode(unserialize($event->getPayload())))
+        );
+        $domainEvent->playhead = $event->getPlayhead();
+        $domainEvent->createdAt = $event->getCreatedAt();
+        $domainEvent->id = $event->getId();
         return $domainEvent;
     }
 
@@ -67,26 +66,12 @@ abstract class DomainEvent
     }
 
     /**
+     * @param $property
      * @return mixed
      */
-    public function getPlayhead()
-    {
-        return $this->playhead;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getCreatedAt()
-    {
-        return $this->createdAt;
-    }
-
-    /**
-     * @return \Ramsey\Uuid\UuidInterface
-     */
-    public function getId(): \Ramsey\Uuid\UuidInterface
-    {
-        return $this->id;
+    public function __get($property) {
+        if ($this->payload->has($property)) {
+            return $this->payload->get($property);
+        }
     }
 }

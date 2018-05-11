@@ -8,6 +8,6 @@ class DomainEventStream extends Collection
 {
     public function guard($index)
     {
-        return $this->items[$index] instanceof DomainEvent;
+        return !$this->items[$index] instanceof DomainEvent;
     }
 }

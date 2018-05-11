@@ -2,7 +2,10 @@
 
 namespace ESFoundation\ES;
 
+use ESFoundation\ES\Errors\DuplicatePlayhead;
+use ESFoundation\ES\Errors\NotADomainEvent;
 use ESFoundation\ES\ValueObjects\AggregateRootId;
+use Illuminate\Support\Carbon;
 
 class InMemoryNonAtomicEventStore implements EventStore
 {
@@ -13,7 +16,7 @@ class InMemoryNonAtomicEventStore implements EventStore
         $errors = collect();
         foreach ($domainEventStream as $index => $domainEvent) {
             if ($domainEventStream->guard($index)) {
-                $errors->put($index, new NotADomainMessage());
+                $errors->put($index, new NotADomainEvent());
                 break;
             }
 
@@ -27,12 +30,16 @@ class InMemoryNonAtomicEventStore implements EventStore
                 $errors->put($index, new DuplicatePlayhead());
                 break;
             }
+
+            if (!$domainEvent->getCreatedAt()) {
+                $domainEvent->setCreatedAt(Carbon::now());
+            }
             $this->events[$aggregateRootId][$playhead] = $domainEvent;
         }
         return $errors;
     }
 
-    public function get(AggregateRootId $aggregateRootId, int $playhead)
+    public function get(AggregateRootId $aggregateRootId, int $playhead = 0)
     {
         if (!isset($this->events[$aggregateRootId->value])) {
             return new DomainEventStream([]);

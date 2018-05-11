@@ -48,4 +48,12 @@ abstract class StorageEvent
     {
         return $this->playhead;
     }
+
+    /**
+     * @param Carbon $createdAt
+     */
+    public function setCreatedAt(Carbon $createdAt)
+    {
+        $this->createdAt = $this->createdAt ?? $createdAt;
+    }
 }

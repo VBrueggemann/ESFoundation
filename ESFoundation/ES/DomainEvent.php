@@ -19,7 +19,7 @@ abstract class DomainEvent extends StorageEvent implements PayloadableContract
     /**
      * DomainEvent constructor.
      * @param AggregateRootId $aggregateRootId
-     * @param Carbon $payload
+     * @param $payload
      * @param int $playhead
      * @param DomainEventId $id
      * @param Carbon $createdAt
@@ -44,7 +44,7 @@ abstract class DomainEvent extends StorageEvent implements PayloadableContract
     public static function deserializePayload(DomainStorageEvent $event)
     {
         $domainEvent = new $event->class(
-            new AggregateRootId($event->getAggregateRootId()),
+            $event->getAggregateRootId(),
             collect(json_decode(unserialize($event->getPayload())))
         );
         $domainEvent->playhead = $event->getPlayhead();

@@ -8,7 +8,7 @@ abstract class Id extends ValueObject
 {
     public function guard($value): bool
     {
-        return Uuid::isValid($value);
+        return Uuid::isValid($value) && is_string($value);
     }
 
     public static function rules(): string

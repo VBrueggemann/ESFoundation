@@ -152,7 +152,7 @@ class IntegrationTestAggregateRoot extends \ESFoundation\ES\EventSourcedAggregat
 
 class IntegrationTestAggregateRootValidator implements \ESFoundation\ES\AggregateRootValidator
 {
-    public static function validate(\ESFoundation\ES\AggregateRoot $aggregateRoot, \ESFoundation\ES\DomainEvent $domainEvent)
+    public static function validate(\ESFoundation\ES\AggregateRoot $aggregateRoot, \ESFoundation\ES\DomainEvent $domainEvent): bool
     {
         return $aggregateRoot->getTest() !== $domainEvent->getPayload()['test'];
     }

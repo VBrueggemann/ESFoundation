@@ -4,13 +4,13 @@ namespace ESFoundation\ES;
 
 interface AggregateRoot
 {
-    public function applyThat(DomainEventStream $event);
+    public function applyThat(DomainEventStream $event): bool;
 
-    public function popUncommittedEvents();
+    public function popUncommittedEvents(): DomainEventStream;
 
-    public function getAggregateRootId();
+    public function getAggregateRootId(): string;
 
-    public function getPlayhead();
+    public function getPlayhead(): int;
 
-    public static function initialize(DomainEventStream $domainEventStream);
+    public static function initialize(DomainEventStream $domainEventStream): AggregateRoot;
 }

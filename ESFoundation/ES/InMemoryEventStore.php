@@ -44,7 +44,7 @@ class InMemoryNonAtomicEventStore implements EventStore
         return $errors;
     }
 
-    public function get(AggregateRootId $aggregateRootId, int $playhead = 0)
+    public function get(AggregateRootId $aggregateRootId, int $playhead = 0): DomainEventStream
     {
         if (!isset($this->events[$aggregateRootId->value])) {
             return DomainEventStream::make([]);

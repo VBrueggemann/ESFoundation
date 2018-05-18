@@ -8,7 +8,7 @@ use ESFoundation\ES\DomainEvent;
 
 class EventSourcedTestAggregateRootValidator implements AggregateRootValidator
 {
-    public static function validate(AggregateRoot $aggregateRoot, DomainEvent $domainEvent)
+    public static function validate(AggregateRoot $aggregateRoot, DomainEvent $domainEvent): bool
     {
         return $domainEvent->getPayload()->first() !== 'test';
     }

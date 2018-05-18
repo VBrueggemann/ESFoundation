@@ -37,7 +37,11 @@ class AggregateRootIntegrationTest extends TestCase
     {
         $aggregateRoot = \tests\EventSourcedTestAggregateRoot::makeNewEventSourcedTestAggregateRoot();
 
-        $aggregateRoot->applyThat(\ESFoundation\ES\DomainEventStream::wrap(new \tests\TestEvent($aggregateRoot->getAggregateRootId(), true)));
+        $aggregateRoot->applyThat(
+            \ESFoundation\ES\DomainEventStream::wrap(
+                new \tests\TestEvent(new AggregateRootId($aggregateRoot->getAggregateRootId()), true)
+            )
+        );
 
         $events = $aggregateRoot->popUncommittedEvents();
 
@@ -54,9 +58,17 @@ class AggregateRootIntegrationTest extends TestCase
     {
         $aggregateRoot = \tests\EventSourcedTestAggregateRoot::makeNewEventSourcedTestAggregateRoot();
 
-        $aggregateRoot->applyThat(\ESFoundation\ES\DomainEventStream::wrap(new \tests\TestEvent($aggregateRoot->getAggregateRootId(), 'test')));
+        $aggregateRoot->applyThat(
+            \ESFoundation\ES\DomainEventStream::wrap(
+                new \tests\TestEvent(new AggregateRootId($aggregateRoot->getAggregateRootId()), 'test')
+            )
+        );
 
-        $aggregateRoot->applyThat(\ESFoundation\ES\DomainEventStream::wrap(new \tests\TestEvent($aggregateRoot->getAggregateRootId(), 'test')));
+        $aggregateRoot->applyThat(
+            \ESFoundation\ES\DomainEventStream::wrap(
+                new \tests\TestEvent(new AggregateRootId($aggregateRoot->getAggregateRootId()), 'test')
+            )
+        );
 
         $events = $aggregateRoot->popUncommittedEvents();
 

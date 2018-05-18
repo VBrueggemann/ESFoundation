@@ -12,7 +12,7 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
 
     protected function __construct(AggregateRootId $aggregateRootId, DomainEvent $creationEvent = null)
     {
-        $this->aggregateRootId = $aggregateRootId;
+        $this->aggregateRootId = $aggregateRootId->value;
         $this->uncommittedEvents = collect();
 
         if ($creationEvent) {
@@ -20,7 +20,7 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
         }
     }
 
-    public function applyThat(DomainEventStream $domainEventStream)
+    public function applyThat(DomainEventStream $domainEventStream): bool
     {
         $validator = $this->getValidator();
         $hasErrors = false;
@@ -43,7 +43,7 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
 
             $domainEvent->setPlayhead($this->playhead);
 
-            $domainEvent->setAggregateRootId($this->aggregateRootId);
+            $domainEvent->setAggregateRootId(new AggregateRootId($this->aggregateRootId));
 
             $hasErrors = $hasErrors || $this->$applyMethod($domainEvent);
 
@@ -53,7 +53,7 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
         return $hasErrors;
     }
 
-    public function popUncommittedEvents()
+    public function popUncommittedEvents(): DomainEventStream
     {
         $domainEventStream = DomainEventStream::wrap($this->uncommittedEvents);
 
@@ -62,7 +62,7 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
         return $domainEventStream;
     }
 
-    public static function initialize(DomainEventStream $domainEventStream)
+    public static function initialize(DomainEventStream $domainEventStream): AggregateRoot
     {
         $className = get_called_class();
         $aggregateRoot = new $className($domainEventStream->first()->getAggregateRootId());
@@ -101,7 +101,7 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
         return $validator;
     }
 
-    public function getAggregateRootId()
+    public function getAggregateRootId(): string
     {
         return $this->aggregateRootId;
     }
@@ -109,7 +109,7 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
     /**
      * @return mixed
      */
-    public function getPlayhead()
+    public function getPlayhead(): int
     {
         return $this->playhead;
     }

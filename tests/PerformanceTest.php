@@ -5,7 +5,7 @@ use ESFoundation\ES\ValueObjects\AggregateRootId;
 class PerformanceTest extends TestCase
 {
     /**
-     * @test
+     * test
      */
     public function performance_integration_test()
     {
@@ -122,7 +122,7 @@ class PerformanceTestAggregateRoot extends \ESFoundation\ES\EventSourcedAggregat
 
 class PerformanceTestAggregateRootValidator implements \ESFoundation\ES\AggregateRootValidator
 {
-    public static function validate(\ESFoundation\ES\AggregateRoot $aggregateRoot, \ESFoundation\ES\DomainEvent $domainEvent)
+    public static function validate(\ESFoundation\ES\AggregateRoot $aggregateRoot, \ESFoundation\ES\DomainEvent $domainEvent): bool
     {
         return $aggregateRoot->getTest() !== $domainEvent->getPayload()['test'];
     }

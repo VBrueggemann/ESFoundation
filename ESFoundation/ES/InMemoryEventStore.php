@@ -47,10 +47,10 @@ class InMemoryNonAtomicEventStore implements EventStore
     public function get(AggregateRootId $aggregateRootId, int $playhead = 0)
     {
         if (!isset($this->events[$aggregateRootId->value])) {
-            return new DomainEventStream([]);
+            return DomainEventStream::make([]);
         }
 
-        return new DomainEventStream(
+        return DomainEventStream::make(
             array_values(
                 array_filter(
                     $this->events[$aggregateRootId->value],
@@ -60,5 +60,10 @@ class InMemoryNonAtomicEventStore implements EventStore
                 )
             )
         );
+    }
+
+    public function size($index)
+    {
+        return sizeof($this->events[$index]);
     }
 }

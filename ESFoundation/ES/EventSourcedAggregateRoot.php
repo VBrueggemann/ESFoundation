@@ -26,6 +26,10 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
         $hasErrors = false;
         
         foreach ($domainEventStream as $index => $domainEvent) {
+            if ($domainEventStream->guard($index)) {
+                break;
+            }
+
             $applyMethod = $this->getApplyMethod($domainEvent);
             if (!method_exists($this, $applyMethod)) {
                 break;
@@ -51,9 +55,9 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
 
     public function popUncommittedEvents()
     {
-        $domainEventStream = new DomainEventStream($this->uncommittedEvents);
+        $domainEventStream = DomainEventStream::wrap($this->uncommittedEvents);
 
-        $this->uncommittedEvents = [];
+        $this->uncommittedEvents = collect();
 
         return $domainEventStream;
     }

@@ -25,7 +25,13 @@ abstract class DomainEvent extends StorageEvent implements PayloadableContract
      * @param Carbon $createdAt
      * @internal param $int $
      */
-    public function __construct(AggregateRootId $aggregateRootId, $payload, int $playhead = 0, DomainEventId $id = null, Carbon $createdAt = null)
+    public function __construct(
+        AggregateRootId $aggregateRootId = null,
+        $payload = null,
+        int $playhead = 0,
+        DomainEventId $id = null,
+        Carbon $createdAt = null
+    )
     {
         $this->id = $id ?? $this->id = Uuid::uuid4()->toString();
         $this->aggregateRootId = $aggregateRootId;
@@ -59,5 +65,13 @@ abstract class DomainEvent extends StorageEvent implements PayloadableContract
     public function getAggregateRootId(): AggregateRootId
     {
         return $this->aggregateRootId;
+    }
+
+    /**
+     * @param AggregateRootId $aggregateRootId
+     */
+    public function setAggregateRootId(AggregateRootId $aggregateRootId)
+    {
+        $this->aggregateRootId = $this->aggregateRootId ?? $aggregateRootId;
     }
 }

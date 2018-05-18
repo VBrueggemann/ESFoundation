@@ -21,6 +21,11 @@ class InMemoryNonAtomicEventStore implements EventStore
             }
 
             $aggregateRootId = $domainEvent->getAggregateRootId()->value;
+            if (!$aggregateRootId) {
+                $errors->put($index, new NoAggregateRootId());
+                break;
+            }
+
             if (!isset($this->events[$aggregateRootId])) {
                 $this->events[$aggregateRootId] = [];
             }

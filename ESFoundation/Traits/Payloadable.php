@@ -1,6 +1,7 @@
 <?php
 namespace ESFoundation\Traits;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
 
 trait Payloadable
@@ -14,6 +15,10 @@ trait Payloadable
 
     private function setPayload($payload, $errorClass)
     {
+        if (is_array($payload)) {
+            $payload = collect($payload);
+        }
+
         if (!is_object($payload)) {
             $payload = collect([$payload]);
         }

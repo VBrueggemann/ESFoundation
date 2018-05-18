@@ -9,4 +9,8 @@ interface AggregateRoot
     public function popUncommittedEvents();
 
     public function getAggregateRootId();
+
+    public function getPlayhead();
+
+    public static function initialize(DomainEventStream $domainEventStream);
 }

@@ -18,7 +18,7 @@ class InMemorySynchronusCommandBus implements CommandBus
         });
     }
 
-    public function subscribe(CommandHandler $commandHandler, Command $command = null)
+    public function subscribe(CommandHandler $commandHandler, string $command = null)
     {
         $this->commandHandlers->push($commandHandler);
     }

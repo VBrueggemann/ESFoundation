@@ -8,6 +8,7 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
 {
     private $uncommittedEvents;
     private $aggregateRootId;
+    private $playhead = -1;
 
     protected function __construct(AggregateRootId $aggregateRootId, DomainEvent $creationEvent = null)
     {
@@ -33,6 +34,12 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
             if ($validator && !$validator::validate($this, $domainEvent)) {
                 break;
             }
+
+            $this->playhead = $this->playhead + 1;
+
+            $domainEvent->setPlayhead($this->playhead);
+
+            $domainEvent->setAggregateRootId($this->aggregateRootId);
 
             $hasErrors = $hasErrors || $this->$applyMethod($domainEvent);
 
@@ -64,6 +71,8 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
                 break;
             }
 
+            $aggregateRoot->playhead = $aggregateRoot->playhead + 1;
+
             $aggregateRoot->$applyMethod($domainEvent);
         }
 
@@ -91,5 +100,13 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
     public function getAggregateRootId()
     {
         return $this->aggregateRootId;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPlayhead()
+    {
+        return $this->playhead;
     }
 }

@@ -56,4 +56,10 @@ abstract class StorageEvent
     {
         $this->createdAt = $this->createdAt ?? $createdAt;
     }
+
+
+    public function setPlayhead(int $playhead)
+    {
+        $this->playhead = $this->playhead === 0 ? $playhead : $this->playhead;
+    }
 }

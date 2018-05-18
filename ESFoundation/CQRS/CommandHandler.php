@@ -19,8 +19,8 @@ abstract class CommandHandler
 
     private function getHandleMethod(Command $command)
     {
-        if (($method = $this->handleMethods[get_class($command)])) {
-            return $method;
+        if (array_key_exists(get_class($command), $this->handleMethods)) {
+            return $this->handleMethods[get_class($command)];
         }
 
         $classParts = explode('\\', get_class($command));

@@ -1,6 +1,6 @@
 <?php
 
-class CommandIntegrationTest extends TestCase
+class CommandUnitTest extends TestCase
 {
     /**
      * @test

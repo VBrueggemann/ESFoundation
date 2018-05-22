@@ -3,7 +3,7 @@
 use ESFoundation\ES\ValueObjects\AggregateRootId;
 use ESFoundation\ES\ValueObjects\DomainEventId;
 
-class EventStoreIntegrationTest extends TestCase
+class EventStoreUnitTest extends TestCase
 {
     /**
      * @test

@@ -14,5 +14,5 @@ interface AggregateRoot
 
     public function getPlayhead(): int;
 
-    public static function initialize(DomainEventStream $domainEventStream): AggregateRoot;
+    public static function initialize(DomainEventStream $domainEventStream, bool $withValidation = false): AggregateRoot;
 }

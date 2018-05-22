@@ -2,9 +2,13 @@
 
 namespace ESFoundation\ES;
 
+use ESFoundation\ES\Contracts\AggregateRepository;
+use ESFoundation\ES\Contracts\AggregateRoot;
+use ESFoundation\ES\Contracts\EventStore;
 use ESFoundation\ES\ValueObjects\AggregateRootId;
+use \ESFoundation\ES\Contracts\EventListener;
 
-class InMemoryCashingAggregateRepository implements AggregateRepository
+class InMemoryCashingAggregateRepository implements AggregateRepository, EventListener
 {
     private $eventStore;
     private $cachedAggregates = [];
@@ -23,7 +27,7 @@ class InMemoryCashingAggregateRepository implements AggregateRepository
         }
 
         if (!(class_exists($aggregateRootClass) && isset(class_implements($aggregateRootClass)[AggregateRoot::class]))) {
-            return null;
+            return new NoAggregateRoot();
         }
 
         if (!($playhead <= 0)) {
@@ -41,5 +45,16 @@ class InMemoryCashingAggregateRepository implements AggregateRepository
         $aggregate = $aggregateRootClass::initialize($domainEventStream);
         $this->cachedAggregates[$aggregateRootId->value] = $aggregate;
         return $aggregate;
+    }
+
+    public function handle(DomainEvent $domainEvent)
+    {
+        $aggregateRootId = $domainEvent->getAggregateRootId()->value;
+
+        if (key_exists($aggregateRootId, $this->cachedAggregates)) {
+            $cached = $this->cachedAggregates[$aggregateRootId];
+            $cached->applyThat($domainEvent);
+            $cached->popUncommittedEvents();
+        }
     }
 }

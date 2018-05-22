@@ -1,9 +1,8 @@
 <?php
 
-namespace ESFoundation\CQRS;
+namespace ESFoundation\ES;
 
-use ESFoundation\ES\DomainEvent;
-use \ESFoundation\ES\EventListener as EventListenerContract;
+use \ESFoundation\ES\Contracts\EventListener as EventListenerContract;
 
 abstract class EventListener implements EventListenerContract
 {

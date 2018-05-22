@@ -9,5 +9,5 @@ interface EventBus
 {
     public function dispatch(DomainEventStream $command);
 
-    public function subscribe(EventListener $eventListener, DomainEvent $event = null);
+    public function subscribe(EventListener $eventListener, string $event = null);
 }

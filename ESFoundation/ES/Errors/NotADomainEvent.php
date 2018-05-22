@@ -2,6 +2,6 @@
 
 namespace ESFoundation\ES\Errors;
 
-class NotADomainEvent
+class NotADomainEvent extends \Exception
 {
 }

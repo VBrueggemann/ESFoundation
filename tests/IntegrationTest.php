@@ -139,6 +139,7 @@ class IntegrationTestAggregateRoot extends \ESFoundation\ES\EventSourcedAggregat
     public function applyThatIntegrationTestEvent(IntegrationTestEvent $testEvent)
     {
         $this->test = $testEvent->test;
+        return true;
     }
 
     /**
@@ -155,5 +156,23 @@ class IntegrationTestAggregateRootValidator implements \ESFoundation\ES\Contract
     public static function validate(\ESFoundation\ES\Contracts\AggregateRoot $aggregateRoot, \ESFoundation\ES\DomainEvent $domainEvent): bool
     {
         return $aggregateRoot->getTest() !== $domainEvent->getPayload()['test'];
+    }
+}
+
+class IntegrationTestEventBus extends \ESFoundation\ES\InMemorySynchronusEventBus {
+    private $eventStore;
+    private $aggregateRepository;
+
+    public function __construct(\ESFoundation\ES\Contracts\EventStore $eventStore, \ESFoundation\ES\Contracts\AggregateRepository $aggregateRepository = null)
+    {
+        $this->eventStore = $eventStore;
+        parent::__construct();
+
+    }
+
+    public function dispatch(\ESFoundation\ES\DomainEventStream $domainEventStream)
+    {
+        parent::dispatch($domainEventStream);
+        $this->eventStore->push($domainEventStream);
     }
 }

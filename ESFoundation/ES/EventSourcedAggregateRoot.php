@@ -3,6 +3,10 @@
 namespace ESFoundation\ES;
 
 use ESFoundation\ES\Contracts\AggregateRoot;
+use ESFoundation\ES\Errors\FailedApplication;
+use ESFoundation\ES\Errors\FailedValidation;
+use ESFoundation\ES\Errors\NoApplyMethod;
+use ESFoundation\ES\Errors\NotADomainEvent;
 use ESFoundation\ES\ValueObjects\AggregateRootId;
 
 abstract class EventSourcedAggregateRoot implements AggregateRoot
@@ -10,51 +14,18 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
     private $uncommittedEvents;
     private $aggregateRootId;
     private $playhead = -1;
+    protected $handleMethods = [];
 
-    protected function __construct(AggregateRootId $aggregateRootId, DomainEvent $creationEvent = null)
+    protected function __construct(AggregateRootId $aggregateRootId)
     {
         $this->aggregateRootId = $aggregateRootId->value;
         $this->uncommittedEvents = collect();
-
-        if ($creationEvent) {
-            $this->applyThat(DomainEventStream::wrap($creationEvent));
-        }
     }
 
     public function applyThat(DomainEventStream $domainEventStream): bool
     {
-        $validator = $this->getValidator();
-        $hasNoErrors = true;
-        
-        foreach ($domainEventStream as $index => $domainEvent) {
-            if ($domainEventStream->guard($index)) {
-                $hasNoErrors = false;
-                break;
-            }
-
-            $applyMethod = $this->getApplyMethod($domainEvent);
-            if (!method_exists($this, $applyMethod)) {
-                $hasNoErrors = false;
-                break;
-            }
-
-            if ($validator && !$validator::validate($this, $domainEvent)) {
-                $hasNoErrors = false;
-                break;
-            }
-
-            $this->playhead = $this->playhead + 1;
-
-            $domainEvent->setPlayhead($this->playhead);
-
-            $domainEvent->setAggregateRootId(new AggregateRootId($this->aggregateRootId));
-
-            $hasNoErrors = $hasNoErrors && $this->$applyMethod($domainEvent);
-
-            $this->uncommittedEvents->push($domainEvent);
-        }
-
-        return $hasNoErrors;
+        $this->validate($domainEventStream);
+        return $this->represent($domainEventStream);
     }
 
     public function popUncommittedEvents(): DomainEventStream
@@ -66,29 +37,55 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
         return $domainEventStream;
     }
 
-    public static function initialize(DomainEventStream $domainEventStream): AggregateRoot
+    public static function initialize(DomainEventStream $domainEventStream, bool $withValidation = false): AggregateRoot
     {
         $className = get_called_class();
         $aggregateRoot = new $className($domainEventStream->first()->getAggregateRootId());
 
-        foreach ($domainEventStream as $domainEvent) {
-
-            $applyMethod = $aggregateRoot->getApplyMethod($domainEvent);
-
-            if (!method_exists($aggregateRoot, $applyMethod)) {
-                break;
-            }
-
-            $aggregateRoot->playhead = $aggregateRoot->playhead + 1;
-
-            $aggregateRoot->$applyMethod($domainEvent);
+        if ($withValidation){
+            $aggregateRoot->validate($domainEventStream);
         }
+        $aggregateRoot->represent($domainEventStream, true);
 
         return $aggregateRoot;
     }
 
+    public function represent(DomainEventStream $domainEventStream, bool $pushToUncommittedEvents = false)
+    {
+        foreach ($domainEventStream as $index => $domainEvent) {
+            $applyMethod = $this->getApplyMethod($domainEvent);
+
+            $this->playhead = $this->playhead + 1;
+
+            throw_if(!$this->$applyMethod($domainEvent), FailedApplication::class);
+
+            if (!$pushToUncommittedEvents) {
+                $domainEvent->setPlayhead($this->playhead);
+
+                $domainEvent->setAggregateRootId(new AggregateRootId($this->aggregateRootId));
+
+                $this->uncommittedEvents->push($domainEvent);
+            }
+        }
+        return true;
+    }
+
+    protected function validate(DomainEventStream $domainEventStream)
+    {
+        $validator = $this->getValidator();
+        foreach ($domainEventStream as $index => $domainEvent) {
+            throw_if($domainEventStream->guard($index), NotADomainEvent::class);
+            throw_if(!method_exists($this, $this->getApplyMethod($domainEvent)), NoApplyMethod::class);
+            throw_if($validator && !$validator::validate($this, $domainEvent), FailedValidation::class);
+        }
+    }
+
     protected function getApplyMethod($event)
     {
+        if (array_key_exists(get_class($event), $this->handleMethods)) {
+            return $this->handleMethods[get_class($event)];
+        }
+
         $classParts = explode('\\', get_class($event));
 
         return 'applyThat' . end($classParts);

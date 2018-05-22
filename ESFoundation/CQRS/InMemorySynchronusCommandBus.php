@@ -15,13 +15,24 @@ class InMemorySynchronusCommandBus implements CommandBus
 
     public function dispatch(Command $command)
     {
-        $this->commandHandlers->each(function ($commandHandler) use ($command) {
+        $commandHandler = $this->commandHandlers->get(get_class($command));
+
+        if ($commandHandler) {
             $commandHandler->handle($command);
+            return;
+        }
+
+        $this->commandHandlers->each(function ($commandHandler) use ($command) {
+            return !$commandHandler->handle($command);
         });
     }
 
     public function subscribe(CommandHandler $commandHandler, string $command = null)
     {
+        if ($command) {
+            $this->commandHandlers->put($command, $commandHandler);
+        }
+
         $this->commandHandlers->push($commandHandler);
     }
 }

@@ -1,29 +1,44 @@
 <?php
 
-namespace ESFoundation\CQRS;
+namespace ESFoundation\ES;
 
-use ESFoundation\ES\DomainEventStream;
-use ESFoundation\ES\EventBus;
+use ESFoundation\ES\Contracts\EventBus;
 use ESFoundation\ES\Contracts\EventListener as EventListenerContract;
 
 class InMemorySynchronusEventBus implements EventBus
 {
-    private $eventListeners;
+    private $globalEventListeners;
+    private $specificEventListeners;
 
     public function __construct()
     {
-        $this->eventListeners = collect();
+        $this->globalEventListeners = collect();
+        $this->specificEventListeners = collect();
     }
 
-    public function dispatch(DomainEventStream $domainEvent)
+    public function dispatch(DomainEventStream $domainEventStream)
     {
-        $this->eventListeners->each(function ($eventListener) use ($domainEvent) {
-            $eventListener->handle($domainEvent);
+        $domainEventStream->each(function ($domainEvent) {
+            $eventListener = $this->specificEventListeners->get(get_class($domainEvent));
+
+            if ($eventListener) {
+                $eventListener->handle($domainEvent);
+            }
+        });
+
+        $this->globalEventListeners->each(function ($eventListener) use ($domainEventStream) {
+            $domainEventStream->each(function ($domainEvent) use ($eventListener) {
+                $eventListener->handle($domainEvent);
+            });
         });
     }
 
-    public function subscribe(EventListener $eventListener, DomainEvent $event = null)
+    public function subscribe(EventListenerContract $eventListener, string $domainEvent = null)
     {
-        $this->eventListeners->push($eventListener);
+        if ($domainEvent) {
+            $this->specificEventListeners->put($domainEvent, $eventListener);
+            return;
+        }
+        $this->globalEventListeners->push($eventListener);
     }
 }

@@ -2,7 +2,7 @@
 
 namespace ESFoundation\ES\Errors;
 
-class DuplicatePlayhead extends \Exception
+class FailedValidation extends \Exception
 {
 
 }

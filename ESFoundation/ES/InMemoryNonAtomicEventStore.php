@@ -7,6 +7,7 @@ use ESFoundation\ES\Errors\DuplicatePlayhead;
 use ESFoundation\ES\Errors\NotADomainEvent;
 use ESFoundation\ES\ValueObjects\AggregateRootId;
 use Illuminate\Support\Carbon;
+use \ESFoundation\ES\Contracts\EventListener;
 
 class InMemoryNonAtomicEventStore implements EventStore
 {

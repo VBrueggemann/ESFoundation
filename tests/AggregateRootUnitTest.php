@@ -49,7 +49,6 @@ class AggregateRootUnitTest extends TestCase
         $this->assertCount(2, $events);
     }
 
-
     /**
      * @test
      */
@@ -57,21 +56,20 @@ class AggregateRootUnitTest extends TestCase
     {
         $aggregateRoot = \tests\EventSourcedTestAggregateRoot::makeNewEventSourcedTestAggregateRoot();
 
-        $aggregateRoot->applyThat(
-            \ESFoundation\ES\DomainEventStream::wrap(
-                new \tests\TestEvent(new AggregateRootId($aggregateRoot->getAggregateRootId()), 'test')
-            )
-        );
+        try{
+            $aggregateRoot->applyThat(
+                \ESFoundation\ES\DomainEventStream::wrap(
+                    new \tests\TestEvent(new AggregateRootId($aggregateRoot->getAggregateRootId()), 'test')
+                )
+            );
+        } catch (\ESFoundation\ES\Errors\FailedValidation $exception) {
+            $events = $aggregateRoot->popUncommittedEvents();
 
-        $aggregateRoot->applyThat(
-            \ESFoundation\ES\DomainEventStream::wrap(
-                new \tests\TestEvent(new AggregateRootId($aggregateRoot->getAggregateRootId()), 'test')
-            )
-        );
+            $this->assertContainsOnly(\tests\TestEvent::class, $events);
+            $this->assertCount(1, $events);
+            return;
+        }
 
-        $events = $aggregateRoot->popUncommittedEvents();
-
-        $this->assertContainsOnly(\tests\TestEvent::class, $events);
-        $this->assertCount(1, $events);
+        $this->assertTrue(false);
     }
 }

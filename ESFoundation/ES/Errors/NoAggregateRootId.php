@@ -2,7 +2,7 @@
 
 namespace ESFoundation\ES\Errors;
 
-class NoAggregateRootId
+class NoAggregateRootId extends \Exception
 {
 
 }

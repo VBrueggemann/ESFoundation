@@ -6,15 +6,16 @@ abstract class CommandHandler
 {
     protected $handleMethods = [];
 
-    public function handle(Command $command)
+    public function handle(Command $command): bool
     {
         $method = $this->getHandleMethod($command);
 
         if (!method_exists($this, $method)) {
-            return;
+            return false;
         }
 
         $this->$method($command);
+        return true;
     }
 
     private function getHandleMethod(Command $command)

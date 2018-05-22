@@ -1,6 +1,9 @@
 <?php
 
-namespace ESFoundation\CQRS;
+namespace ESFoundation\CQRS\Contracts;
+
+use ESFoundation\CQRS\Command;
+use ESFoundation\CQRS\CommandHandler;
 
 interface CommandBus
 {

@@ -2,8 +2,8 @@
 
 namespace tests;
 
-use ESFoundation\ES\AggregateRoot;
-use ESFoundation\ES\AggregateRootValidator;
+use ESFoundation\ES\Contracts\AggregateRoot;
+use ESFoundation\ES\Contracts\AggregateRootValidator;
 use ESFoundation\ES\DomainEvent;
 
 class EventSourcedTestAggregateRootValidator implements AggregateRootValidator

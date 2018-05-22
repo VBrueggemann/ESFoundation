@@ -10,7 +10,7 @@ class IntegrationTest extends TestCase
     public function a_command_can_change_state()
     {
         $eventStore = new \ESFoundation\ES\InMemoryNonAtomicEventStore();
-        $aggregateRepository = new \ESFoundation\ES\NonCashingAggregateRepository($eventStore);
+        $aggregateRepository = new \ESFoundation\ES\NonCachingAggregateRepository($eventStore);
         $commandBus = new \ESFoundation\CQRS\InMemorySynchronusCommandBus();
         $commandHandler = new IntegrationTestCommandHandler($aggregateRepository, $eventStore);
         $commandBus->subscribe($commandHandler, IntegrationTestCommand::class);
@@ -77,7 +77,7 @@ class IntegrationTestCommandHandler extends \ESFoundation\CQRS\CommandHandler
     private $aggregateRepository;
     private $eventStore;
 
-    function __construct(\ESFoundation\ES\AggregateRepository $aggregateRepository, \ESFoundation\ES\EventStore $eventStore)
+    function __construct(\ESFoundation\ES\Contracts\AggregateRepository $aggregateRepository, \ESFoundation\ES\Contracts\EventStore $eventStore)
     {
         $this->aggregateRepository = $aggregateRepository;
         $this->eventStore = $eventStore;
@@ -150,9 +150,9 @@ class IntegrationTestAggregateRoot extends \ESFoundation\ES\EventSourcedAggregat
     }
 }
 
-class IntegrationTestAggregateRootValidator implements \ESFoundation\ES\AggregateRootValidator
+class IntegrationTestAggregateRootValidator implements \ESFoundation\ES\Contracts\AggregateRootValidator
 {
-    public static function validate(\ESFoundation\ES\AggregateRoot $aggregateRoot, \ESFoundation\ES\DomainEvent $domainEvent): bool
+    public static function validate(\ESFoundation\ES\Contracts\AggregateRoot $aggregateRoot, \ESFoundation\ES\DomainEvent $domainEvent): bool
     {
         return $aggregateRoot->getTest() !== $domainEvent->getPayload()['test'];
     }

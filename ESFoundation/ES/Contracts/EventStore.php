@@ -1,7 +1,8 @@
 <?php
 
-namespace ESFoundation\ES;
+namespace ESFoundation\ES\Contracts;
 
+use ESFoundation\ES\DomainEventStream;
 use ESFoundation\ES\ValueObjects\AggregateRootId;
 
 interface EventStore

@@ -1,6 +1,8 @@
 <?php
 
-namespace ESFoundation\ES;
+namespace ESFoundation\ES\Contracts;
+
+use ESFoundation\ES\DomainEventStream;
 
 interface AggregateRoot
 {

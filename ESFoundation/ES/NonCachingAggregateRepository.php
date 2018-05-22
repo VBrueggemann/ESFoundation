@@ -2,9 +2,12 @@
 
 namespace ESFoundation\ES;
 
+use ESFoundation\ES\Contracts\AggregateRepository;
+use ESFoundation\ES\Contracts\AggregateRoot;
+use ESFoundation\ES\Contracts\EventStore;
 use ESFoundation\ES\ValueObjects\AggregateRootId;
 
-class NonCashingAggregateRepository implements AggregateRepository
+class NonCachingAggregateRepository implements AggregateRepository
 {
     private $eventStore;
 

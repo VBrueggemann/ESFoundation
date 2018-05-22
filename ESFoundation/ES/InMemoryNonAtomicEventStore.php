@@ -2,6 +2,7 @@
 
 namespace ESFoundation\ES;
 
+use ESFoundation\ES\Contracts\EventStore;
 use ESFoundation\ES\Errors\DuplicatePlayhead;
 use ESFoundation\ES\Errors\NotADomainEvent;
 use ESFoundation\ES\ValueObjects\AggregateRootId;

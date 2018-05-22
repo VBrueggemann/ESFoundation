@@ -2,6 +2,8 @@
 
 namespace ESFoundation\CQRS;
 
+use ESFoundation\CQRS\Contracts\CommandBus;
+
 class InMemorySynchronusCommandBus implements CommandBus
 {
     private $commandHandlers;

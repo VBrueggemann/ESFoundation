@@ -1,7 +1,6 @@
 <?php
 
 use ESFoundation\ES\ValueObjects\AggregateRootId;
-use ESFoundation\ES\ValueObjects\DomainEventId;
 
 class AggregateRootIntegrationTest extends TestCase
 {

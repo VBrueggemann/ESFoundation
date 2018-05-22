@@ -2,6 +2,7 @@
 
 namespace ESFoundation\ES;
 
+use ESFoundation\ES\Contracts\AggregateRoot;
 use ESFoundation\ES\ValueObjects\AggregateRootId;
 
 abstract class EventSourcedAggregateRoot implements AggregateRoot
@@ -97,7 +98,7 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
     {
         $validator = get_class($this) . 'Validator';
 
-        if (!(class_exists($validator) && isset(class_implements($validator)['ESFoundation\ES\AggregateRootValidator']))) {
+        if (!(class_exists($validator) && isset(class_implements($validator)['ESFoundation\ES\Contracts\AggregateRootValidator']))) {
             return null;
         }
 

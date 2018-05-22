@@ -5,9 +5,46 @@ use ESFoundation\ES\ValueObjects\AggregateRootId;
 class PerformanceTest extends TestCase
 {
     /**
-     * test
+     * @test
      */
-    public function performance_integration_test()
+    public function performance_single_aggregate_no_caching_integration_test()
+    {
+        $eventStore = new \ESFoundation\ES\InMemoryNonAtomicEventStore();
+        $aggregateRepository = new \ESFoundation\ES\NonCashingAggregateRepository($eventStore);
+        $commandBus = new \ESFoundation\CQRS\InMemorySynchronusCommandBus();
+        $commandHandler = new PerformanceTestCommandHandler($aggregateRepository, $eventStore);
+        $commandBus->subscribe($commandHandler, PerformanceTestCommand::class);
+        $aggregateRootId = \Ramsey\Uuid\Uuid::uuid4()->toString();
+
+        \Illuminate\Support\Facades\Storage::disk('local')->put('performance_single_aggregate_no_caching_integration_test.csv', 'nr,time,events');
+
+        for ($i = 0; $i<1500; $i++) {
+            $t = microtime(true);
+            for ($j = 0; $j<10; $j++) {
+                $commandBus->dispatch(
+                    new PerformanceTestCommand([
+                        'aggregateRootId' => $aggregateRootId,
+                        'test' => $i + $j
+                    ])
+                );
+            }
+
+            if ($i%10 == 0) {
+                $aggregateRepository->load(
+                    new AggregateRootId($aggregateRootId),
+                    IntegrationTestAggregateRoot::class
+                );
+
+                \Illuminate\Support\Facades\Storage::disk('local')
+                    ->append('performance_single_aggregate_no_caching_integration_test.csv', (($i/10) . ',' . (microtime(true) - $t) . ',' . $i*10));
+            }
+        }
+    }
+
+    /**
+     * @test
+     */
+    public function performance_single_aggregate_caching_integration_test()
     {
         $eventStore = new \ESFoundation\ES\InMemoryNonAtomicEventStore();
         $aggregateRepository = new \ESFoundation\ES\InMemoryCashingAggregateRepository($eventStore);
@@ -16,7 +53,7 @@ class PerformanceTest extends TestCase
         $commandBus->subscribe($commandHandler, PerformanceTestCommand::class);
         $aggregateRootId = \Ramsey\Uuid\Uuid::uuid4()->toString();
 
-        \Illuminate\Support\Facades\Storage::disk('local')->put('file.csv', 'nr,time,events');
+        \Illuminate\Support\Facades\Storage::disk('local')->put('performance_single_aggregate_caching_integration_test.csv', 'nr,time,events');
 
         for ($i = 0; $i<1500; $i++) {
             $t = microtime(true);
@@ -36,7 +73,165 @@ class PerformanceTest extends TestCase
 
             if ($i%10 == 0) {
                 \Illuminate\Support\Facades\Storage::disk('local')
-                    ->append('file.csv', (($i/10) . ',' . (microtime(true) - $t) . ',' . $eventStore->size($aggregateRootId)));
+                    ->append('performance_single_aggregate_caching_integration_test.csv', (($i/10) . ',' . (microtime(true) - $t) . ',' . $i*10));
+            }
+        }
+    }
+
+    /**
+     * @test
+     */
+    public function performance_multiple_aggregate_no_caching_integration_test()
+    {
+        $eventStore = new \ESFoundation\ES\InMemoryNonAtomicEventStore();
+        $aggregateRepository = new \ESFoundation\ES\NonCashingAggregateRepository($eventStore);
+        $commandBus = new \ESFoundation\CQRS\InMemorySynchronusCommandBus();
+        $commandHandler = new PerformanceTestCommandHandler($aggregateRepository, $eventStore);
+        $commandBus->subscribe($commandHandler, PerformanceTestCommand::class);
+
+        \Illuminate\Support\Facades\Storage::disk('local')->put('performance_multiple_aggregate_no_caching_integration_test.csv', 'nr,time,events');
+
+        for ($i = 0; $i<1500; $i++) {
+            $t = microtime(true);
+
+            $aggregateRootId[$i] = \Ramsey\Uuid\Uuid::uuid4()->toString();
+
+            for ($j = 0; $j<10; $j++) {
+                $commandBus->dispatch(
+                    new PerformanceTestCommand([
+                        'aggregateRootId' => $aggregateRootId[$i],
+                        'test' => $i + $j
+                    ])
+                );
+            }
+
+            if ($i%10 == 0) {
+                foreach ($aggregateRootId as $agri){
+                    $aggregateRepository->load(
+                        new AggregateRootId($agri),
+                        IntegrationTestAggregateRoot::class
+                    );
+                }
+
+                \Illuminate\Support\Facades\Storage::disk('local')
+                    ->append('performance_multiple_aggregate_no_caching_integration_test.csv', (($i/10) . ',' . (microtime(true) - $t) . ',' . $i*10));
+            }
+        }
+    }
+
+    /**
+     * @test
+     */
+    public function performance_multiple_aggregate_caching_integration_test()
+    {
+        $eventStore = new \ESFoundation\ES\InMemoryNonAtomicEventStore();
+        $aggregateRepository = new \ESFoundation\ES\InMemoryCashingAggregateRepository($eventStore);
+        $commandBus = new \ESFoundation\CQRS\InMemorySynchronusCommandBus();
+        $commandHandler = new PerformanceTestCommandHandler($aggregateRepository, $eventStore);
+        $commandBus->subscribe($commandHandler, PerformanceTestCommand::class);
+
+        \Illuminate\Support\Facades\Storage::disk('local')->put('performance_multiple_aggregate_caching_integration_test.csv', 'nr,time,events');
+
+        for ($i = 0; $i<1500; $i++) {
+            $t = microtime(true);
+
+            $aggregateRootId[$i] = \Ramsey\Uuid\Uuid::uuid4()->toString();
+
+            for ($j = 0; $j<10; $j++) {
+                $commandBus->dispatch(
+                    new PerformanceTestCommand([
+                        'aggregateRootId' => $aggregateRootId[$i],
+                        'test' => $i + $j
+                    ])
+                );
+            }
+
+            if ($i%10 == 0) {
+                foreach ($aggregateRootId as $agri){
+                    $aggregateRepository->load(
+                        new AggregateRootId($agri),
+                        IntegrationTestAggregateRoot::class
+                    );
+                }
+
+                \Illuminate\Support\Facades\Storage::disk('local')
+                    ->append('performance_multiple_aggregate_caching_integration_test.csv', (($i/10) . ',' . (microtime(true) - $t) . ',' . $i*10));
+            }
+        }
+    }
+
+    /**
+     * @test
+     */
+    public function performance_multiple_aggregate_one_event_no_caching_integration_test()
+    {
+        $eventStore = new \ESFoundation\ES\InMemoryNonAtomicEventStore();
+        $aggregateRepository = new \ESFoundation\ES\NonCashingAggregateRepository($eventStore);
+        $commandBus = new \ESFoundation\CQRS\InMemorySynchronusCommandBus();
+        $commandHandler = new PerformanceTestCommandHandler($aggregateRepository, $eventStore);
+        $commandBus->subscribe($commandHandler, PerformanceTestCommand::class);
+
+        \Illuminate\Support\Facades\Storage::disk('local')->put('performance_multiple_aggregate_one_event_no_caching_integration_test.csv', 'nr,time,events');
+
+        for ($i = 0; $i<15000; $i++) {
+            $t = microtime(true);
+            $aggregateRootId[$i] = \Ramsey\Uuid\Uuid::uuid4()->toString();
+
+            $commandBus->dispatch(
+                new PerformanceTestCommand([
+                    'aggregateRootId' => $aggregateRootId[$i],
+                    'test' => $i + $i
+                ])
+            );
+
+            if ($i%100 == 0) {
+                foreach ($aggregateRootId as $agid) {
+                    $aggregateRepository->load(
+                        new AggregateRootId($agid),
+                        IntegrationTestAggregateRoot::class
+                    );
+                }
+
+                \Illuminate\Support\Facades\Storage::disk('local')
+                    ->append('performance_multiple_aggregate_one_event_no_caching_integration_test.csv', (($i/100) . ',' . (microtime(true) - $t) . ',' . $i));
+            }
+        }
+    }
+
+    /**
+     * @test
+     */
+    public function performance_multiple_aggregate_one_event_caching_integration_test()
+    {
+        $eventStore = new \ESFoundation\ES\InMemoryNonAtomicEventStore();
+        $aggregateRepository = new \ESFoundation\ES\InMemoryCashingAggregateRepository($eventStore);
+        $commandBus = new \ESFoundation\CQRS\InMemorySynchronusCommandBus();
+        $commandHandler = new PerformanceTestCommandHandler($aggregateRepository, $eventStore);
+        $commandBus->subscribe($commandHandler, PerformanceTestCommand::class);
+
+        \Illuminate\Support\Facades\Storage::disk('local')->put('performance_multiple_aggregate_one_event_caching_integration_test.csv', 'nr,time,events');
+
+        for ($i = 0; $i<15000; $i++) {
+            $t = microtime(true);
+            $aggregateRootId[$i] = \Ramsey\Uuid\Uuid::uuid4()->toString();
+
+            $commandBus->dispatch(
+                new PerformanceTestCommand([
+                    'aggregateRootId' => $aggregateRootId[$i],
+                    'test' => $i + $i
+                ])
+            );
+
+            if ($i%100 == 0) {
+                foreach ($aggregateRootId as $agid) {
+                    $aggregateRepository->load(
+                        new AggregateRootId($agid),
+                        IntegrationTestAggregateRoot::class
+                    );
+                }
+
+                \Illuminate\Support\Facades\Storage::disk('local')
+                    ->append('performance_multiple_aggregate_one_event_caching_integration_test.csv', (($i/100) . ',' . (microtime(true) - $t) . ',' . $i));
             }
         }
     }

@@ -61,9 +61,4 @@ class InMemoryNonAtomicEventStore implements EventStore
             )
         );
     }
-
-    public function size($index)
-    {
-        return sizeof($this->events[$index]);
-    }
 }

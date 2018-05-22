@@ -23,19 +23,22 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
     public function applyThat(DomainEventStream $domainEventStream): bool
     {
         $validator = $this->getValidator();
-        $hasErrors = false;
+        $hasNoErrors = true;
         
         foreach ($domainEventStream as $index => $domainEvent) {
             if ($domainEventStream->guard($index)) {
+                $hasNoErrors = false;
                 break;
             }
 
             $applyMethod = $this->getApplyMethod($domainEvent);
             if (!method_exists($this, $applyMethod)) {
+                $hasNoErrors = false;
                 break;
             }
 
             if ($validator && !$validator::validate($this, $domainEvent)) {
+                $hasNoErrors = false;
                 break;
             }
 
@@ -45,12 +48,12 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
 
             $domainEvent->setAggregateRootId(new AggregateRootId($this->aggregateRootId));
 
-            $hasErrors = $hasErrors || $this->$applyMethod($domainEvent);
+            $hasNoErrors = $hasNoErrors && $this->$applyMethod($domainEvent);
 
             $this->uncommittedEvents->push($domainEvent);
         }
 
-        return $hasErrors;
+        return $hasNoErrors;
     }
 
     public function popUncommittedEvents(): DomainEventStream

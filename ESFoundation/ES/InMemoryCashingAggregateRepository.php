@@ -26,8 +26,8 @@ class InMemoryCashingAggregateRepository implements AggregateRepository
             return null;
         }
 
-        if (!$playhead) {
-            return $aggregateRootClass::initialize($playhead <= 0 ? $domainEventStream : $domainEventStream->take($playhead));
+        if (!($playhead <= 0)) {
+            return $aggregateRootClass::initialize($domainEventStream->take($playhead));
         }
 
         if (key_exists($aggregateRootId->value, $this->cachedAggregates)) {

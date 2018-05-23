@@ -9,16 +9,22 @@ use Ramsey\Uuid\Uuid;
 
 class EventSourcedTestAggregateRoot extends EventSourcedAggregateRoot
 {
-    public static function makeNewEventSourcedTestAggregateRoot($payload = true)
+    public static function makeNewEventSourcedTestAggregateRoot(Collection $payload = null)
     {
         $aggregateRootId = new AggregateRootId(Uuid::uuid4()->toString());
-        $self = new self($aggregateRootId);
-        $self->applyThat(DomainEventStream::wrap(new TestEvent($aggregateRootId, $payload)));
-        return $self;
+        $values = new EventSourcedTestAggregateRootValues($aggregateRootId);
+        self::applyThat(DomainEventStream::wrap(new TestEvent($aggregateRootId, $payload)), $values);
+        return $values;
     }
 
-    protected function applyThatTestEvent(TestEvent $testEvent)
+    protected static function applyThatTestEvent(TestEvent $testEvent, EventSourcedTestAggregateRootValues $values)
     {
-        return $testEvent->getPayload()->first;
+        if ($testEvent->first) {
+            $values->put('first', $testEvent->first);
+        }
+        if ($testEvent->second) {
+            $values->put('second', $testEvent->second);
+        }
+        return true;
     }
 }

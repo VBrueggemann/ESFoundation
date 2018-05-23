@@ -8,110 +8,96 @@ use ESFoundation\ES\Errors\FailedValidation;
 use ESFoundation\ES\Errors\NoApplyMethod;
 use ESFoundation\ES\Errors\NotADomainEvent;
 use ESFoundation\ES\ValueObjects\AggregateRootId;
+use ESFoundation\ES\ValueObjects\AggregateRootValueObject;
 
 abstract class EventSourcedAggregateRoot implements AggregateRoot
 {
-    private $uncommittedEvents;
-    private $aggregateRootId;
-    private $playhead = -1;
-    protected $handleMethods = [];
+    protected static $handleMethods = [];
+    protected static $validator;
 
-    protected function __construct(AggregateRootId $aggregateRootId)
+    private function __construct()
     {
-        $this->aggregateRootId = $aggregateRootId->value;
-        $this->uncommittedEvents = collect();
     }
 
-    public function applyThat(DomainEventStream $domainEventStream): bool
+    public static function applyThat(DomainEventStream $domainEventStream, AggregateRootValueObject $aggregateRootValueObject): void
     {
-        $this->validate($domainEventStream);
-        return $this->represent($domainEventStream);
+        self::validate($domainEventStream, $aggregateRootValueObject);
+        self::represent($domainEventStream, $aggregateRootValueObject);
     }
 
-    public function popUncommittedEvents(): DomainEventStream
+    public static function initialize(DomainEventStream $domainEventStream, bool $withValidation = false): AggregateRootValueObject
     {
-        $domainEventStream = DomainEventStream::wrap($this->uncommittedEvents);
-
-        $this->uncommittedEvents = collect();
-
-        return $domainEventStream;
-    }
-
-    public static function initialize(DomainEventStream $domainEventStream, bool $withValidation = false): AggregateRoot
-    {
-        $className = get_called_class();
-        $aggregateRoot = new $className($domainEventStream->first()->getAggregateRootId());
+        $self = get_called_class();
+        $className = $self . 'Values';
+        $aggregateRootValueObject = new $className($domainEventStream->first()->getAggregateRootId());
 
         if ($withValidation){
-            $aggregateRoot->validate($domainEventStream);
+            $self::validate($domainEventStream, $aggregateRootValueObject);
         }
-        $aggregateRoot->represent($domainEventStream, true);
+        $self::represent($domainEventStream, $aggregateRootValueObject, false);
 
-        return $aggregateRoot;
+        return $aggregateRootValueObject;
     }
 
-    public function represent(DomainEventStream $domainEventStream, bool $pushToUncommittedEvents = false)
+    public static function represent(
+        DomainEventStream $domainEventStream,
+        AggregateRootValueObject $aggregateRootValueObject,
+        bool $pushToUncommittedEvents = true): void
     {
+        $self = get_called_class();
         foreach ($domainEventStream as $index => $domainEvent) {
-            $applyMethod = $this->getApplyMethod($domainEvent);
+            $applyMethod = $self::getApplyMethod($domainEvent, $aggregateRootValueObject);
 
-            $this->playhead = $this->playhead + 1;
+            $aggregateRootValueObject->setPlayhead($domainEvent->getPlayhead() ?: $aggregateRootValueObject->getPlayhead() + 1);
 
-            throw_if(!$this->$applyMethod($domainEvent), FailedApplication::class);
+            throw_if(!$self::$applyMethod($domainEvent, $aggregateRootValueObject), FailedApplication::class);
 
-            if (!$pushToUncommittedEvents) {
-                $domainEvent->setPlayhead($this->playhead);
+            if ($pushToUncommittedEvents) {
+                $domainEvent->setPlayhead($aggregateRootValueObject->getPlayhead());
 
-                $domainEvent->setAggregateRootId(new AggregateRootId($this->aggregateRootId));
+                $domainEvent->setAggregateRootId(new AggregateRootId($aggregateRootValueObject->getAggregateRootId()));
 
-                $this->uncommittedEvents->push($domainEvent);
+                $aggregateRootValueObject->pushToUncommittedEvents($domainEvent);
             }
         }
-        return true;
     }
 
-    protected function validate(DomainEventStream $domainEventStream)
+    public static function validate(DomainEventStream $domainEventStream, AggregateRootValueObject $aggregateRootValueObject): void
     {
-        $validator = $this->getValidator();
+        $self = get_called_class();
+        $validator = $self::getValidator();
         foreach ($domainEventStream as $index => $domainEvent) {
             throw_if($domainEventStream->guard($index), NotADomainEvent::class);
-            throw_if(!method_exists($this, $this->getApplyMethod($domainEvent)), NoApplyMethod::class);
-            throw_if($validator && !$validator::validate($this, $domainEvent), FailedValidation::class);
+            throw_if(!method_exists($self, $self::getApplyMethod($domainEvent)), NoApplyMethod::class);
+            throw_if($validator && !$validator::validate($aggregateRootValueObject, $domainEvent), FailedValidation::class);
         }
     }
 
-    protected function getApplyMethod($event)
+    protected static function getApplyMethod($domainEvent, AggregateRootValueObject $aggregateRootValueObject = null)
     {
-        if (array_key_exists(get_class($event), $this->handleMethods)) {
-            return $this->handleMethods[get_class($event)];
+        $self = get_called_class();
+        if (array_key_exists(get_class($domainEvent), $self::$handleMethods)) {
+            return $self::$handleMethods[get_class($domainEvent)];
         }
 
-        $classParts = explode('\\', get_class($event));
+        $classParts = explode('\\', get_class($domainEvent));
 
         return 'applyThat' . end($classParts);
     }
 
-    protected function getValidator()
+    protected static function getValidator()
     {
-        $validator = get_class($this) . 'Validator';
+        $self = get_called_class();
+        if ($self::$validator) {
+            return $self::$validator;
+        }
+
+        $validator = $self . 'Validator';
 
         if (!(class_exists($validator) && isset(class_implements($validator)['ESFoundation\ES\Contracts\AggregateRootValidator']))) {
             return null;
         }
 
         return $validator;
-    }
-
-    public function getAggregateRootId(): string
-    {
-        return $this->aggregateRootId;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getPlayhead(): int
-    {
-        return $this->playhead;
     }
 }

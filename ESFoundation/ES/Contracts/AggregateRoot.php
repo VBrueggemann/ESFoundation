@@ -3,16 +3,18 @@
 namespace ESFoundation\ES\Contracts;
 
 use ESFoundation\ES\DomainEventStream;
+use ESFoundation\ES\ValueObjects\AggregateRootValueObject;
 
 interface AggregateRoot
 {
-    public function applyThat(DomainEventStream $event): bool;
+    public static function applyThat(DomainEventStream $domainEventStream, AggregateRootValueObject $aggregateRootValueObject): void;
 
-    public function popUncommittedEvents(): DomainEventStream;
+    public static function initialize(DomainEventStream $domainEventStream, bool $withValidation = false): AggregateRootValueObject;
 
-    public function getAggregateRootId(): string;
+    public static function represent(DomainEventStream $domainEventStream,
+        AggregateRootValueObject $aggregateRootValueObject,
+        bool $pushToUncommittedEvents = true
+    ): void;
 
-    public function getPlayhead(): int;
-
-    public static function initialize(DomainEventStream $domainEventStream, bool $withValidation = false): AggregateRoot;
+    public static function validate(DomainEventStream $domainEventStream, AggregateRootValueObject $aggregateRootValueObject): void;
 }

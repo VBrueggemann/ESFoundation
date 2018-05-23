@@ -15,6 +15,10 @@ trait Payloadable
 
     private function setPayload($payload, $errorClass)
     {
+        if ($payload === null) {
+            $payload = collect();
+        }
+
         if (is_array($payload)) {
             $payload = collect($payload);
         }

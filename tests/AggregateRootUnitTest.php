@@ -11,12 +11,12 @@ class AggregateRootUnitTest extends TestCase
     {
         $aggregateRootId = new \ESFoundation\ES\ValueObjects\AggregateRootId(\Ramsey\Uuid\Uuid::uuid4()->toString());
 
-        $event = new \tests\TestEvent($aggregateRootId, null);
+        $event = new \tests\TestEvent($aggregateRootId, ['first' => 'one']);
 
-        $aggregateRoot = \tests\EventSourcedTestAggregateRoot::initialize(\ESFoundation\ES\DomainEventStream::wrap($event));
+        $aggregateRootValueObject = \tests\EventSourcedTestAggregateRoot::initialize(\ESFoundation\ES\DomainEventStream::wrap($event));
 
-        $this->assertEmpty($aggregateRoot->popUncommittedEvents());
-        $this->assertEquals($aggregateRootId->value, $aggregateRoot->getAggregateRootId());
+        $this->assertEmpty($aggregateRootValueObject->popUncommittedEvents());
+        $this->assertEquals($aggregateRootId->value, $aggregateRootValueObject->getAggregateRootId());
     }
 
     /**
@@ -34,15 +34,16 @@ class AggregateRootUnitTest extends TestCase
      */
     public function an_event_can_be_applied_to_an_aggregate_root()
     {
-        $aggregateRoot = \tests\EventSourcedTestAggregateRoot::makeNewEventSourcedTestAggregateRoot();
+        $aggregateRootValues = \tests\EventSourcedTestAggregateRoot::makeNewEventSourcedTestAggregateRoot();
 
-        $aggregateRoot->applyThat(
+        \tests\EventSourcedTestAggregateRoot::applyThat(
             \ESFoundation\ES\DomainEventStream::wrap(
-                new \tests\TestEvent(new AggregateRootId($aggregateRoot->getAggregateRootId()), true)
-            )
+                new \tests\TestEvent(new AggregateRootId($aggregateRootValues->getAggregateRootId()), ['first' => 'one'])
+            ),
+            $aggregateRootValues
         );
 
-        $events = $aggregateRoot->popUncommittedEvents();
+        $events = $aggregateRootValues->popUncommittedEvents();
 
 
         $this->assertContainsOnly(\tests\TestEvent::class, $events);
@@ -54,16 +55,17 @@ class AggregateRootUnitTest extends TestCase
      */
     public function an_aggregate_root_validates_before_applying()
     {
-        $aggregateRoot = \tests\EventSourcedTestAggregateRoot::makeNewEventSourcedTestAggregateRoot();
+        $aggregateRootValues = \tests\EventSourcedTestAggregateRoot::makeNewEventSourcedTestAggregateRoot();
 
-        try{
-            $aggregateRoot->applyThat(
+        try {
+            \tests\EventSourcedTestAggregateRoot::applyThat(
                 \ESFoundation\ES\DomainEventStream::wrap(
-                    new \tests\TestEvent(new AggregateRootId($aggregateRoot->getAggregateRootId()), 'test')
-                )
+                    new \tests\TestEvent(new AggregateRootId($aggregateRootValues->getAggregateRootId()), ['first' => 'second'])
+                ),
+                $aggregateRootValues
             );
         } catch (\ESFoundation\ES\Errors\FailedValidation $exception) {
-            $events = $aggregateRoot->popUncommittedEvents();
+            $events = $aggregateRootValues->popUncommittedEvents();
 
             $this->assertContainsOnly(\tests\TestEvent::class, $events);
             $this->assertCount(1, $events);

@@ -11,10 +11,12 @@ class IntegrationTest extends TestCase
     {
         $eventStore = new \ESFoundation\ES\InMemoryNonAtomicEventStore();
         $aggregateRepository = new \ESFoundation\ES\NonCachingAggregateRepository($eventStore);
+        $eventBus = new IntegrationTestEventBus($eventStore, $aggregateRepository);
         $commandBus = new \ESFoundation\CQRS\InMemorySynchronusCommandBus();
-        $commandHandler = new IntegrationTestCommandHandler($aggregateRepository, $eventStore);
+        $commandHandler = new IntegrationTestCommandHandler($eventBus, $aggregateRepository);
         $commandBus->subscribe($commandHandler, IntegrationTestCommand::class);
         $aggregateRootId = \Ramsey\Uuid\Uuid::uuid4()->toString();
+
         $commandBus->dispatch(
             new IntegrationTestCommand([
                 'aggregateRootId' => $aggregateRootId,
@@ -34,7 +36,7 @@ class IntegrationTest extends TestCase
             $aggregateRepository->load(
                 new AggregateRootId($aggregateRootId),
                 IntegrationTestAggregateRoot::class
-            )->getTest()
+            )->test
         );
 
         $this->assertEquals(
@@ -74,24 +76,24 @@ class IntegrationTest extends TestCase
 
 class IntegrationTestCommandHandler extends \ESFoundation\CQRS\CommandHandler
 {
+    private $eventBus;
     private $aggregateRepository;
-    private $eventStore;
 
-    function __construct(\ESFoundation\ES\Contracts\AggregateRepository $aggregateRepository, \ESFoundation\ES\Contracts\EventStore $eventStore)
+    function __construct(\ESFoundation\ES\Contracts\EventBus $eventBus, \ESFoundation\ES\Contracts\AggregateRepository $aggregateRepository)
     {
         $this->aggregateRepository = $aggregateRepository;
-        $this->eventStore = $eventStore;
+        $this->eventBus = $eventBus;
     }
 
     public function handleIntegrationTestCommand(IntegrationTestCommand $command)
     {
-        $testAggregate = $this->aggregateRepository->load(
+        $testAggregateValue = $this->aggregateRepository->load(
             new AggregateRootId($command->aggregateRootId),
             IntegrationTestAggregateRoot::class
         );
 
-        if (!$testAggregate) {
-            $this->eventStore->push(
+        if (!$testAggregateValue) {
+            $this->eventBus->dispatch(
                 \ESFoundation\ES\DomainEventStream::wrap(
                     new IntegrationTestEvent(new AggregateRootId($command->aggregateRootId), ['test' => 'first'])
                 )
@@ -99,15 +101,14 @@ class IntegrationTestCommandHandler extends \ESFoundation\CQRS\CommandHandler
             return;
         }
 
-        $testAggregate->applyThat(
+        IntegrationTestAggregateRoot::applyThat(
             \ESFoundation\ES\DomainEventStream::wrap(
                 new IntegrationTestEvent(null, ['test' => $command->test])
-            )
+            ),
+            $testAggregateValue
         );
 
-        $this->eventStore->push(
-            $testAggregate->popUncommittedEvents()
-        );
+        $this->eventBus->dispatch($testAggregateValue->popUncommittedEvents());
     }
 }
 
@@ -134,28 +135,18 @@ class IntegrationTestEvent extends \ESFoundation\ES\DomainEvent
 
 class IntegrationTestAggregateRoot extends \ESFoundation\ES\EventSourcedAggregateRoot
 {
-    private $test = '';
-
-    public function applyThatIntegrationTestEvent(IntegrationTestEvent $testEvent)
+    public static function applyThatIntegrationTestEvent(IntegrationTestEvent $testEvent, \ESFoundation\ES\ValueObjects\AggregateRootValueObject $aggregateRootValueObject)
     {
-        $this->test = $testEvent->test;
+        $aggregateRootValueObject->put('test', $testEvent->test);
         return true;
-    }
-
-    /**
-     * @return string
-     */
-    public function getTest(): string
-    {
-        return $this->test;
     }
 }
 
 class IntegrationTestAggregateRootValidator implements \ESFoundation\ES\Contracts\AggregateRootValidator
 {
-    public static function validate(\ESFoundation\ES\Contracts\AggregateRoot $aggregateRoot, \ESFoundation\ES\DomainEvent $domainEvent): bool
+    public static function validate(\ESFoundation\ES\ValueObjects\AggregateRootValueObject $aggregateRoot, \ESFoundation\ES\DomainEvent $domainEvent): bool
     {
-        return $aggregateRoot->getTest() !== $domainEvent->getPayload()['test'];
+        return $aggregateRoot->test !== $domainEvent->test;
     }
 }
 
@@ -174,5 +165,23 @@ class IntegrationTestEventBus extends \ESFoundation\ES\InMemorySynchronusEventBu
     {
         parent::dispatch($domainEventStream);
         $this->eventStore->push($domainEventStream);
+    }
+}
+
+class IntegrationTestAggregateRootValues extends \ESFoundation\ES\ValueObjects\AggregateRootValueObject {
+
+    public static function valueObjects(): \Illuminate\Support\Collection
+    {
+        return collect([
+           'test' => IntegrationTestValueObject::class
+        ]);
+    }
+}
+
+class IntegrationTestValueObject extends \ESFoundation\ValueObjects\ValueObject {
+
+    public static function rules(): string
+    {
+        return \Illuminate\Validation\Rule::in(['first', 'second']);
     }
 }

@@ -37,4 +37,30 @@ class AggregateRepositoryUnitTest extends TestCase
             $aggregateRepository->load($aggregateRootId, \tests\EventSourcedTestAggregateRoot::class)
         );
     }
+
+    /**
+     * @test
+     */
+    public function a_caching_aggregate_repository_caches_aggregates()
+    {
+        $eventStore = new \ESFoundation\ES\InMemoryNonAtomicEventStore();
+        $aggregateRepository = new \ESFoundation\ES\InMemoryCashingAggregateRepository($eventStore);
+
+        $aggregateRootId = new \ESFoundation\ES\ValueObjects\AggregateRootId(\Ramsey\Uuid\Uuid::uuid4()->toString());
+
+        $eventStore->push(\ESFoundation\ES\DomainEventStream::wrap(new \tests\TestEvent(
+            $aggregateRootId,
+            ['test' => 'test']
+        )));
+
+        $this->assertEquals(
+            $aggregateRepository->load($aggregateRootId, \tests\EventSourcedTestAggregateRoot::class)->getAggregateRootId(),
+            $aggregateRootId->value
+        );
+
+        $this->assertEquals(
+            $aggregateRepository->load($aggregateRootId, \tests\EventSourcedTestAggregateRoot::class)->getAggregateRootId(),
+            $aggregateRootId->value
+        );
+    }
 }

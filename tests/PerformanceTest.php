@@ -317,7 +317,7 @@ class PerformanceTestAggregateRoot extends \ESFoundation\ES\EventSourcedAggregat
 
 class PerformanceTestAggregateRootValidator implements \ESFoundation\ES\Contracts\AggregateRootValidator
 {
-    public static function validate(\ESFoundation\ES\ValueObjects\AggregateRootValueObject $aggregateRoot, \ESFoundation\ES\DomainEvent $domainEvent): bool
+    public static function validate(\ESFoundation\ES\ValueObjects\AggregateRootProjection $aggregateRoot, \ESFoundation\ES\DomainEvent $domainEvent): bool
     {
         return $aggregateRoot->getTest() !== $domainEvent->getPayload()['test'];
     }

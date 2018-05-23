@@ -135,16 +135,16 @@ class IntegrationTestEvent extends \ESFoundation\ES\DomainEvent
 
 class IntegrationTestAggregateRoot extends \ESFoundation\ES\EventSourcedAggregateRoot
 {
-    public static function applyThatIntegrationTestEvent(IntegrationTestEvent $testEvent, \ESFoundation\ES\ValueObjects\AggregateRootValueObject $aggregateRootValueObject)
+    public static function applyThatIntegrationTestEvent(IntegrationTestEvent $testEvent, \ESFoundation\ES\ValueObjects\AggregateRootProjection $AggregateRootProjection)
     {
-        $aggregateRootValueObject->put('test', $testEvent->test);
+        $AggregateRootProjection->put('test', $testEvent->test);
         return true;
     }
 }
 
 class IntegrationTestAggregateRootValidator implements \ESFoundation\ES\Contracts\AggregateRootValidator
 {
-    public static function validate(\ESFoundation\ES\ValueObjects\AggregateRootValueObject $aggregateRoot, \ESFoundation\ES\DomainEvent $domainEvent): bool
+    public static function validate(\ESFoundation\ES\ValueObjects\AggregateRootProjection $aggregateRoot, \ESFoundation\ES\DomainEvent $domainEvent): bool
     {
         return $aggregateRoot->test !== $domainEvent->test;
     }
@@ -168,7 +168,7 @@ class IntegrationTestEventBus extends \ESFoundation\ES\InMemorySynchronusEventBu
     }
 }
 
-class IntegrationTestAggregateRootValues extends \ESFoundation\ES\ValueObjects\AggregateRootValueObject {
+class IntegrationTestAggregateRootValues extends \ESFoundation\ES\ValueObjects\AggregateRootProjection {
 
     public static function valueObjects(): \Illuminate\Support\Collection
     {

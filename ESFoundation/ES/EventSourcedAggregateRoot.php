@@ -8,7 +8,7 @@ use ESFoundation\ES\Errors\FailedValidation;
 use ESFoundation\ES\Errors\NoApplyMethod;
 use ESFoundation\ES\Errors\NotADomainEvent;
 use ESFoundation\ES\ValueObjects\AggregateRootId;
-use ESFoundation\ES\ValueObjects\AggregateRootValueObject;
+use ESFoundation\ES\ValueObjects\AggregateRootProjection;
 
 abstract class EventSourcedAggregateRoot implements AggregateRoot
 {
@@ -19,61 +19,61 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
     {
     }
 
-    public static function applyThat(DomainEventStream $domainEventStream, AggregateRootValueObject $aggregateRootValueObject): void
+    public static function applyThat(DomainEventStream $domainEventStream, AggregateRootProjection $AggregateRootProjection): void
     {
-        self::validate($domainEventStream, $aggregateRootValueObject);
-        self::represent($domainEventStream, $aggregateRootValueObject);
+        self::validate($domainEventStream, $AggregateRootProjection);
+        self::represent($domainEventStream, $AggregateRootProjection);
     }
 
-    public static function initialize(DomainEventStream $domainEventStream, bool $withValidation = false): AggregateRootValueObject
+    public static function initialize(DomainEventStream $domainEventStream, bool $withValidation = false): AggregateRootProjection
     {
         $self = get_called_class();
         $className = $self . 'Values';
-        $aggregateRootValueObject = new $className($domainEventStream->first()->getAggregateRootId());
+        $AggregateRootProjection = new $className($domainEventStream->first()->getAggregateRootId());
 
         if ($withValidation){
-            $self::validate($domainEventStream, $aggregateRootValueObject);
+            $self::validate($domainEventStream, $AggregateRootProjection);
         }
-        $self::represent($domainEventStream, $aggregateRootValueObject, false);
+        $self::represent($domainEventStream, $AggregateRootProjection, false);
 
-        return $aggregateRootValueObject;
+        return $AggregateRootProjection;
     }
 
     public static function represent(
         DomainEventStream $domainEventStream,
-        AggregateRootValueObject $aggregateRootValueObject,
+        AggregateRootProjection $AggregateRootProjection,
         bool $pushToUncommittedEvents = true): void
     {
         $self = get_called_class();
         foreach ($domainEventStream as $index => $domainEvent) {
-            $applyMethod = $self::getApplyMethod($domainEvent, $aggregateRootValueObject);
+            $applyMethod = $self::getApplyMethod($domainEvent, $AggregateRootProjection);
 
-            $aggregateRootValueObject->setPlayhead($domainEvent->getPlayhead() ?: $aggregateRootValueObject->getPlayhead() + 1);
+            $AggregateRootProjection->setPlayhead($domainEvent->getPlayhead() ?: $AggregateRootProjection->getPlayhead() + 1);
 
-            throw_if(!$self::$applyMethod($domainEvent, $aggregateRootValueObject), FailedApplication::class);
+            throw_if(!$self::$applyMethod($domainEvent, $AggregateRootProjection), FailedApplication::class);
 
             if ($pushToUncommittedEvents) {
-                $domainEvent->setPlayhead($aggregateRootValueObject->getPlayhead());
+                $domainEvent->setPlayhead($AggregateRootProjection->getPlayhead());
 
-                $domainEvent->setAggregateRootId(new AggregateRootId($aggregateRootValueObject->getAggregateRootId()));
+                $domainEvent->setAggregateRootId(new AggregateRootId($AggregateRootProjection->getAggregateRootId()));
 
-                $aggregateRootValueObject->pushToUncommittedEvents($domainEvent);
+                $AggregateRootProjection->pushToUncommittedEvents($domainEvent);
             }
         }
     }
 
-    public static function validate(DomainEventStream $domainEventStream, AggregateRootValueObject $aggregateRootValueObject): void
+    public static function validate(DomainEventStream $domainEventStream, AggregateRootProjection $AggregateRootProjection): void
     {
         $self = get_called_class();
         $validator = $self::getValidator();
         foreach ($domainEventStream as $index => $domainEvent) {
             throw_if($domainEventStream->guard($index), NotADomainEvent::class);
             throw_if(!method_exists($self, $self::getApplyMethod($domainEvent)), NoApplyMethod::class);
-            throw_if($validator && !$validator::validate($aggregateRootValueObject, $domainEvent), FailedValidation::class);
+            throw_if($validator && !$validator::validate($AggregateRootProjection, $domainEvent), FailedValidation::class);
         }
     }
 
-    protected static function getApplyMethod($domainEvent, AggregateRootValueObject $aggregateRootValueObject = null)
+    protected static function getApplyMethod($domainEvent, AggregateRootProjection $AggregateRootProjection = null)
     {
         $self = get_called_class();
         if (array_key_exists(get_class($domainEvent), $self::$handleMethods)) {

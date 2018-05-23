@@ -13,10 +13,10 @@ class AggregateRootUnitTest extends TestCase
 
         $event = new \tests\TestEvent($aggregateRootId, ['first' => 'one']);
 
-        $aggregateRootValueObject = \tests\EventSourcedTestAggregateRoot::initialize(\ESFoundation\ES\DomainEventStream::wrap($event));
+        $AggregateRootProjection = \tests\EventSourcedTestAggregateRoot::initialize(\ESFoundation\ES\DomainEventStream::wrap($event));
 
-        $this->assertEmpty($aggregateRootValueObject->popUncommittedEvents());
-        $this->assertEquals($aggregateRootId->value, $aggregateRootValueObject->getAggregateRootId());
+        $this->assertEmpty($AggregateRootProjection->popUncommittedEvents());
+        $this->assertEquals($aggregateRootId->value, $AggregateRootProjection->getAggregateRootId());
     }
 
     /**

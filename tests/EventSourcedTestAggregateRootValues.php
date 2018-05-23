@@ -2,11 +2,11 @@
 
 namespace tests;
 
-use ESFoundation\ES\ValueObjects\AggregateRootValueObject;
+use ESFoundation\ES\ValueObjects\AggregateRootProjection;
 use ESFoundation\ES\ValueObjects\TestValueObject;
 use Illuminate\Support\Collection;
 
-class EventSourcedTestAggregateRootValues extends AggregateRootValueObject
+class EventSourcedTestAggregateRootValues extends AggregateRootProjection
 {
     public static function valueObjects(): Collection
     {

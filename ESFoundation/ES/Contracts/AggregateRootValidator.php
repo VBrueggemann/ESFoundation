@@ -3,9 +3,9 @@
 namespace ESFoundation\ES\Contracts;
 
 use ESFoundation\ES\DomainEvent;
-use ESFoundation\ES\ValueObjects\AggregateRootValueObject;
+use ESFoundation\ES\ValueObjects\AggregateRootProjection;
 
 interface AggregateRootValidator
 {
-    public static function validate(AggregateRootValueObject $aggregateRoot, DomainEvent $domainEvent): bool;
+    public static function validate(AggregateRootProjection $aggregateRoot, DomainEvent $domainEvent): bool;
 }

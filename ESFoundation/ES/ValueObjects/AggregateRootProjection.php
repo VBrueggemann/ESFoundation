@@ -8,7 +8,7 @@ use ESFoundation\ES\Errors\DuplicatePlayhead;
 use ESFoundation\ValueObjects\GroupedValueObject;
 use Illuminate\Support\Collection;
 
-abstract class AggregateRootValueObject extends GroupedValueObject
+abstract class AggregateRootProjection extends GroupedValueObject
 {
     private $aggregateRootId;
     private $uncommittedEvents;

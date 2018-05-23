@@ -8,7 +8,7 @@ use ESFoundation\ES\Contracts\EventListener;
 use ESFoundation\ES\Contracts\EventStore;
 use ESFoundation\ES\Errors\NoAggregateRoot;
 use ESFoundation\ES\ValueObjects\AggregateRootId;
-use ESFoundation\ES\ValueObjects\AggregateRootValueObject;
+use ESFoundation\ES\ValueObjects\AggregateRootProjection;
 
 class InMemoryCashingAggregateRepository implements AggregateRepository, EventListener
 {
@@ -20,7 +20,7 @@ class InMemoryCashingAggregateRepository implements AggregateRepository, EventLi
         $this->eventStore = $eventStore;
     }
 
-    public function load(AggregateRootId $aggregateRootId, string $aggregateRootClass, int $playhead = 0) : ?AggregateRootValueObject
+    public function load(AggregateRootId $aggregateRootId, string $aggregateRootClass, int $playhead = 0) : ?AggregateRootProjection
     {
         $domainEventStream = $this->eventStore->get($aggregateRootId);
 
@@ -36,23 +36,23 @@ class InMemoryCashingAggregateRepository implements AggregateRepository, EventLi
         }
 
         if (key_exists($aggregateRootId->value, $this->cachedAggregateValues)) {
-            $cached = $this->cachedAggregates[$aggregateRootId->value];
+            $cached = $this->cachedAggregateValues[$aggregateRootId->value];
             $unappliedEvents = $this->eventStore->get($aggregateRootId, $cached->getPlayhead());
-            $aggregateRootClass::reperesent($unappliedEvents, $cached);
-            return $cached;
+            $aggregateRootClass::represent($unappliedEvents, $cached);
+            return $cached->clone();
         }
 
         $aggregateValues = $aggregateRootClass::initialize($domainEventStream);
-        $this->cachedAggregates[$aggregateRootId->value] = $aggregateValues;
-        return $aggregateValues;
+        $this->cachedAggregateValues[$aggregateRootId->value] = $aggregateValues;
+        return $aggregateValues->clone();
     }
 
     public function handle(DomainEvent $domainEvent)
     {
         $aggregateRootId = $domainEvent->getAggregateRootId()->value;
 
-        if (key_exists($aggregateRootId, $this->cachedAggregates)) {
-            $cached = $this->cachedAggregates[$aggregateRootId];
+        if (key_exists($aggregateRootId, $this->cachedAggregateValues)) {
+            $cached = $this->cachedAggregateValues[$aggregateRootId];
             $aggregateRoot = substr(get_class($cached), 0, -6);
             $aggregateRoot::represent($domainEvent);
         }

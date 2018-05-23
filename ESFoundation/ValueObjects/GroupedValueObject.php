@@ -2,6 +2,7 @@
 
 namespace ESFoundation\ValueObjects;
 
+use ESFoundation\ES\ValueObjects\AggregateRootId;
 use Illuminate\Support\Collection;
 
 abstract class GroupedValueObject
@@ -48,5 +49,17 @@ abstract class GroupedValueObject
     public function raw($name)
     {
         return $this->values->get($name);
+    }
+
+    public function clone()
+    {
+        $values = $this->values->each(function ($item, $key) {
+            if ($item instanceof GroupedValueObject) {
+                return $item->clone();
+            }
+            return $item->value;
+        });
+        $class = get_class($this);
+        return new $class(new AggregateRootId($this->getAggregateRootId()), $values);
     }
 }

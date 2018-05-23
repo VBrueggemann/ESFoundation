@@ -6,7 +6,7 @@ use ESFoundation\ES\Contracts\AggregateRepository;
 use ESFoundation\ES\Contracts\AggregateRoot;
 use ESFoundation\ES\Contracts\EventStore;
 use ESFoundation\ES\ValueObjects\AggregateRootId;
-use ESFoundation\ES\ValueObjects\AggregateRootValueObject;
+use ESFoundation\ES\ValueObjects\AggregateRootProjection;
 
 class NonCachingAggregateRepository implements AggregateRepository
 {
@@ -17,7 +17,7 @@ class NonCachingAggregateRepository implements AggregateRepository
         $this->eventStore = $eventStore;
     }
 
-    public function load(AggregateRootId $aggregateRootId, string $aggregateRootClass, int $playhead = 0) : ?AggregateRootValueObject
+    public function load(AggregateRootId $aggregateRootId, string $aggregateRootClass, int $playhead = 0) : ?AggregateRootProjection
     {
         $domainEventStream = $this->eventStore->get($aggregateRootId);
 

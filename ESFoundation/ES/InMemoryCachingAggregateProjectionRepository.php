@@ -2,7 +2,7 @@
 
 namespace ESFoundation\ES;
 
-use ESFoundation\ES\Contracts\AggregateRepository;
+use ESFoundation\ES\Contracts\AggregateProjectionRepository;
 use ESFoundation\ES\Contracts\AggregateRoot;
 use ESFoundation\ES\Contracts\EventListener;
 use ESFoundation\ES\Contracts\EventStore;
@@ -10,7 +10,7 @@ use ESFoundation\ES\Errors\NoAggregateRoot;
 use ESFoundation\ES\ValueObjects\AggregateRootId;
 use ESFoundation\ES\ValueObjects\AggregateRootProjection;
 
-class InMemoryCashingAggregateRepository implements AggregateRepository, EventListener
+class InMemoryCashingAggregateProjectionRepository implements AggregateProjectionRepository, EventListener
 {
     private $eventStore;
     private $cachedAggregateValues = [];

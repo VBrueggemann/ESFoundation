@@ -14,8 +14,7 @@ abstract class CommandHandler
             return false;
         }
 
-        $this->$method($command);
-        return true;
+        return $this->$method($command);
     }
 
     private function getHandleMethod(Command $command)

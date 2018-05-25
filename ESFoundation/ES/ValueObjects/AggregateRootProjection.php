@@ -13,11 +13,13 @@ abstract class AggregateRootProjection extends GroupedValueObject
     private $aggregateRootId;
     private $uncommittedEvents;
     private $playhead = -1;
+    private $aggregateRoot;
 
-    public function __construct(AggregateRootId $aggregateRootId, Collection $values = null)
+    public function __construct(AggregateRootId $aggregateRootId, Collection $values = null, string $aggregateRoot = '')
     {
         $this->aggregateRootId = $aggregateRootId->value;
         $this->uncommittedEvents = DomainEventStream::make();
+        $this->aggregateRoot = $aggregateRoot ?: substr(get_class($this), 0, -6);
         parent::__construct($values);
     }
 
@@ -52,8 +54,31 @@ abstract class AggregateRootProjection extends GroupedValueObject
         return $this->aggregateRootId;
     }
 
+    /**
+     * @return bool|string
+     */
+    public function getAggregateRoot()
+    {
+        return $this->aggregateRoot;
+    }
+
     public function pushToUncommittedEvents(DomainEvent $domainEvent)
     {
         $this->uncommittedEvents->push($domainEvent);
+    }
+
+    public function applyThat(DomainEventStream $domainEventStream)
+    {
+        $this->aggregateRoot::applyThat($domainEventStream, $this);
+        return $this;
+    }
+
+    public function clone()
+    {
+        $clone = parent::clone();
+        $clone->aggregateRootId = $this->aggregateRootId;
+        $clone->playhead = $this->playhead;
+        $clone->aggregateRoot = $this->aggregateRoot;
+        return $clone;
     }
 }

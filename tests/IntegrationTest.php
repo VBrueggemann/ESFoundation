@@ -10,10 +10,10 @@ class IntegrationTest extends TestCase
     public function a_command_can_change_state()
     {
         $eventStore = new \ESFoundation\ES\InMemoryNonAtomicEventStore();
-        $aggregateRepository = new \ESFoundation\ES\NonCachingAggregateRepository($eventStore);
-        $eventBus = new IntegrationTestEventBus($eventStore, $aggregateRepository);
+        $aggregateProjectionRepository = new \ESFoundation\ES\InMemoryCachingAggregateProjectionRepository($eventStore);
+        $eventBus = new IntegrationTestEventBus($eventStore, $aggregateProjectionRepository);
         $commandBus = new \ESFoundation\CQRS\InMemorySynchronusCommandBus();
-        $commandHandler = new IntegrationTestCommandHandler($eventBus, $aggregateRepository);
+        $commandHandler = new IntegrationTestCommandHandler($eventBus, $aggregateProjectionRepository);
         $commandBus->subscribe($commandHandler, IntegrationTestCommand::class);
         $aggregateRootId = \Ramsey\Uuid\Uuid::uuid4()->toString();
 
@@ -33,7 +33,7 @@ class IntegrationTest extends TestCase
 
         $this->assertEquals(
             'second',
-            $aggregateRepository->load(
+            $aggregateProjectionRepository->load(
                 new AggregateRootId($aggregateRootId),
                 IntegrationTestAggregateRoot::class
             )->test
@@ -41,14 +41,14 @@ class IntegrationTest extends TestCase
 
         $this->assertEquals(
             $aggregateRootId,
-            $aggregateRepository->load(
+            $aggregateProjectionRepository->load(
                 new AggregateRootId($aggregateRootId),
                 IntegrationTestAggregateRoot::class
             )->getAggregateRootId()
         );
 
         $this->assertEmpty(
-            $aggregateRepository->load(
+            $aggregateProjectionRepository->load(
                 new AggregateRootId($aggregateRootId),
                 IntegrationTestAggregateRoot::class
             )->popUncommittedEvents()
@@ -56,7 +56,7 @@ class IntegrationTest extends TestCase
 
         $this->assertEquals(
             1,
-            $aggregateRepository->load(
+            $aggregateProjectionRepository->load(
                 new AggregateRootId($aggregateRootId),
                 IntegrationTestAggregateRoot::class
             )->getPlayhead()
@@ -64,7 +64,7 @@ class IntegrationTest extends TestCase
 
         $this->assertEquals(
             0,
-            $aggregateRepository->load(
+            $aggregateProjectionRepository->load(
                 new AggregateRootId($aggregateRootId),
                 IntegrationTestAggregateRoot::class,
                 1
@@ -77,38 +77,32 @@ class IntegrationTest extends TestCase
 class IntegrationTestCommandHandler extends \ESFoundation\CQRS\CommandHandler
 {
     private $eventBus;
-    private $aggregateRepository;
+    private $aggregateProjectionRepository;
 
-    function __construct(\ESFoundation\ES\Contracts\EventBus $eventBus, \ESFoundation\ES\Contracts\AggregateRepository $aggregateRepository)
+    function __construct(\ESFoundation\ES\Contracts\EventBus $eventBus, \ESFoundation\ES\Contracts\AggregateProjectionRepository $aggregateProjectionRepository)
     {
-        $this->aggregateRepository = $aggregateRepository;
+        $this->aggregateProjectionRepository = $aggregateProjectionRepository;
         $this->eventBus = $eventBus;
     }
 
     public function handleIntegrationTestCommand(IntegrationTestCommand $command)
     {
-        $testAggregateValue = $this->aggregateRepository->load(
+        $testAggregateValue = $this->aggregateProjectionRepository->load(
             new AggregateRootId($command->aggregateRootId),
             IntegrationTestAggregateRoot::class
         );
 
         if (!$testAggregateValue) {
             $this->eventBus->dispatch(
-                \ESFoundation\ES\DomainEventStream::wrap(
-                    new IntegrationTestEvent(new AggregateRootId($command->aggregateRootId), ['test' => 'first'])
-                )
+                IntegrationTestEvent::wraped(new AggregateRootId($command->aggregateRootId), ['test' => 'first'])
             );
-            return;
+            return true;
         }
 
-        IntegrationTestAggregateRoot::applyThat(
-            \ESFoundation\ES\DomainEventStream::wrap(
-                new IntegrationTestEvent(null, ['test' => $command->test])
-            ),
-            $testAggregateValue
-        );
+        IntegrationTestAggregateRoot::applyThat(IntegrationTestEvent::wraped(null, ['test' => $command->test]), $testAggregateValue);
 
         $this->eventBus->dispatch($testAggregateValue->popUncommittedEvents());
+        return true;
     }
 }
 
@@ -152,13 +146,12 @@ class IntegrationTestAggregateRootValidator implements \ESFoundation\ES\Contract
 
 class IntegrationTestEventBus extends \ESFoundation\ES\InMemorySynchronusEventBus {
     private $eventStore;
-    private $aggregateRepository;
 
-    public function __construct(\ESFoundation\ES\Contracts\EventStore $eventStore, \ESFoundation\ES\Contracts\AggregateRepository $aggregateRepository = null)
+    public function __construct(\ESFoundation\ES\Contracts\EventStore $eventStore, \ESFoundation\ES\Contracts\AggregateProjectionRepository $aggregateProjectionRepository = null)
     {
-        $this->eventStore = $eventStore;
         parent::__construct();
-
+        $this->eventStore = $eventStore;
+        $this->subscribe($aggregateProjectionRepository);
     }
 
     public function dispatch(\ESFoundation\ES\DomainEventStream $domainEventStream)

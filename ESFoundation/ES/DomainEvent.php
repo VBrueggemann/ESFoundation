@@ -62,7 +62,7 @@ abstract class DomainEvent extends StorageEvent implements PayloadableContract
     /**
      * @return AggregateRootId
      */
-    public function getAggregateRootId(): AggregateRootId
+    public function getAggregateRootId(): ?AggregateRootId
     {
         return $this->aggregateRootId;
     }
@@ -73,5 +73,15 @@ abstract class DomainEvent extends StorageEvent implements PayloadableContract
     public function setAggregateRootId(AggregateRootId $aggregateRootId)
     {
         $this->aggregateRootId = $this->aggregateRootId ?? $aggregateRootId;
+    }
+
+    public static function wraped(  AggregateRootId $aggregateRootId = null,
+                                    $payload = null,
+                                    int $playhead = 0,
+                                    DomainEventId $id = null,
+                                    Carbon $createdAt = null)
+    {
+        $self = get_called_class();
+        return DomainEventStream::wrap(new $self($aggregateRootId, $payload, $playhead, $id, $createdAt));
     }
 }

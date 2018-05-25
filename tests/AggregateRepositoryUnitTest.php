@@ -1,6 +1,6 @@
 <?php
 
-class AggregateRepositoryUnitTest extends TestCase
+class AggregateProjectionRepositoryUnitTest extends TestCase
 {
     /**
      * @test
@@ -8,7 +8,7 @@ class AggregateRepositoryUnitTest extends TestCase
     public function an_aggregate_repository_can_retrieve_an_aggregate()
     {
         $eventStore = new \ESFoundation\ES\InMemoryNonAtomicEventStore();
-        $aggregateRepository = new \ESFoundation\ES\InMemoryCashingAggregateRepository($eventStore);
+        $aggregateProjectionRepository = new \ESFoundation\ES\InMemoryCachingAggregateProjectionRepository($eventStore);
 
         $aggregateRootId = new \ESFoundation\ES\ValueObjects\AggregateRootId(\Ramsey\Uuid\Uuid::uuid4()->toString());
 
@@ -18,7 +18,7 @@ class AggregateRepositoryUnitTest extends TestCase
         )));
 
         $this->assertEquals(
-            $aggregateRepository->load($aggregateRootId, \tests\EventSourcedTestAggregateRoot::class)->getAggregateRootId(),
+            $aggregateProjectionRepository->load($aggregateRootId, \tests\EventSourcedTestAggregateRoot::class)->getAggregateRootId(),
             $aggregateRootId->value
         );
     }
@@ -29,12 +29,12 @@ class AggregateRepositoryUnitTest extends TestCase
     public function an_aggregate_repository_returns_null_if_no_aggregate_exists()
     {
         $eventStore = new \ESFoundation\ES\InMemoryNonAtomicEventStore();
-        $aggregateRepository = new \ESFoundation\ES\InMemoryCashingAggregateRepository($eventStore);
+        $aggregateProjectionRepository = new \ESFoundation\ES\InMemoryCachingAggregateProjectionRepository($eventStore);
 
         $aggregateRootId = new \ESFoundation\ES\ValueObjects\AggregateRootId(\Ramsey\Uuid\Uuid::uuid4()->toString());
 
         $this->assertNull(
-            $aggregateRepository->load($aggregateRootId, \tests\EventSourcedTestAggregateRoot::class)
+            $aggregateProjectionRepository->load($aggregateRootId, \tests\EventSourcedTestAggregateRoot::class)
         );
     }
 
@@ -44,7 +44,7 @@ class AggregateRepositoryUnitTest extends TestCase
     public function a_caching_aggregate_repository_caches_aggregates()
     {
         $eventStore = new \ESFoundation\ES\InMemoryNonAtomicEventStore();
-        $aggregateRepository = new \ESFoundation\ES\InMemoryCashingAggregateRepository($eventStore);
+        $aggregateProjectionRepository = new \ESFoundation\ES\InMemoryCachingAggregateProjectionRepository($eventStore);
 
         $aggregateRootId = new \ESFoundation\ES\ValueObjects\AggregateRootId(\Ramsey\Uuid\Uuid::uuid4()->toString());
 
@@ -54,12 +54,12 @@ class AggregateRepositoryUnitTest extends TestCase
         )));
 
         $this->assertEquals(
-            $aggregateRepository->load($aggregateRootId, \tests\EventSourcedTestAggregateRoot::class)->getAggregateRootId(),
+            $aggregateProjectionRepository->load($aggregateRootId, \tests\EventSourcedTestAggregateRoot::class)->getAggregateRootId(),
             $aggregateRootId->value
         );
 
         $this->assertEquals(
-            $aggregateRepository->load($aggregateRootId, \tests\EventSourcedTestAggregateRoot::class)->getAggregateRootId(),
+            $aggregateProjectionRepository->load($aggregateRootId, \tests\EventSourcedTestAggregateRoot::class)->getAggregateRootId(),
             $aggregateRootId->value
         );
     }

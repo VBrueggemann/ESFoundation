@@ -10,7 +10,7 @@ use ESFoundation\ES\Errors\NoAggregateRoot;
 use ESFoundation\ES\ValueObjects\AggregateRootId;
 use ESFoundation\ES\ValueObjects\AggregateRootProjection;
 
-class InMemoryCashingAggregateProjectionRepository implements AggregateProjectionRepository, EventListener
+class InMemoryCachingAggregateProjectionRepository implements AggregateProjectionRepository, EventListener
 {
     private $eventStore;
     private $cachedAggregateValues = [];
@@ -37,8 +37,10 @@ class InMemoryCashingAggregateProjectionRepository implements AggregateProjectio
 
         if (key_exists($aggregateRootId->value, $this->cachedAggregateValues)) {
             $cached = $this->cachedAggregateValues[$aggregateRootId->value];
-            $unappliedEvents = $this->eventStore->get($aggregateRootId, $cached->getPlayhead());
-            $aggregateRootClass::represent($unappliedEvents, $cached);
+            $unappliedEvents = $this->eventStore->get($aggregateRootId, $cached->getPlayhead() + 1);
+            if ($unappliedEvents->isNotEmpty()) {
+                $aggregateRootClass::represent($unappliedEvents, $cached, false);
+            }
             return $cached->clone();
         }
 
@@ -53,8 +55,8 @@ class InMemoryCashingAggregateProjectionRepository implements AggregateProjectio
 
         if (key_exists($aggregateRootId, $this->cachedAggregateValues)) {
             $cached = $this->cachedAggregateValues[$aggregateRootId];
-            $aggregateRoot = substr(get_class($cached), 0, -6);
-            $aggregateRoot::represent($domainEvent);
+            $aggregateRoot = $cached->getAggregateRoot();
+            $aggregateRoot::represent(DomainEventStream::wrap($domainEvent), $cached, false);
         }
     }
 }

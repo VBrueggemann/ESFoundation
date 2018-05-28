@@ -9,10 +9,10 @@ class IntegrationTest extends TestCase
      */
     public function a_command_can_change_state()
     {
-        $aggregateProjectionRepository = app(\ESFoundation\ES\Contracts\AggregateProjectionRepository::class);
-        $eventBus = app(\ESFoundation\ES\Contracts\EventBus::class);
+        $aggregateProjectionRepository = ESF::aggregateProjectionRepository();
+        $eventBus = ESF::eventBus();
         $eventBus->subscribe($aggregateProjectionRepository);
-        $commandBus = app(\ESFoundation\CQRS\Contracts\CommandBus::class);
+        $commandBus = ESF::commandBus();
         $commandHandler = new IntegrationTestCommandHandler($eventBus, $aggregateProjectionRepository);
         $commandBus->subscribe($commandHandler, IntegrationTestCommand::class);
 

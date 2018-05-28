@@ -52,6 +52,14 @@ class ESFoundationServiceProvider extends ServiceProvider
                 case 'memory': return new InMemorySynchronusCommandBus();
             }
         });
+
+        $this->app->bind('ESF', function ($app) {
+            return new ESF();
+        });
+
+        if (!class_exists('ESF')) {
+            class_alias('ESFoundation\ServiceProviders\ESFacade', 'ESF');
+        }
     }
 
     public function boot()

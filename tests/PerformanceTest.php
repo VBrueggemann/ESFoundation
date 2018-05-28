@@ -2,17 +2,18 @@
 
 use ESFoundation\ES\ValueObjects\AggregateRootId;
 
-class PerformanceTest extends TestCase
+class PerformanceTest //extends TestCase
 {
     /**
-     * test
+     * @test
      */
     public function performance_single_aggregate_no_caching_integration_test()
     {
         $eventStore = new \ESFoundation\ES\InMemoryNonAtomicEventStore();
-        $AggregateProjectionRepository = new \ESFoundation\ES\NonCachingAggregateProjectionRepository($eventStore);
+        $aggregateProjectionRepository = new \ESFoundation\ES\NonCachingAggregateProjectionRepository($eventStore);
         $commandBus = new \ESFoundation\CQRS\InMemorySynchronusCommandBus();
-        $commandHandler = new PerformanceTestCommandHandler($AggregateProjectionRepository, $eventStore);
+        $eventBus = new \ESFoundation\ES\InMemorySynchronusEventBus($eventStore);
+        $commandHandler = new PerformanceTestCommandHandler($eventBus, $aggregateProjectionRepository);
         $commandBus->subscribe($commandHandler, PerformanceTestCommand::class);
         $aggregateRootId = \Ramsey\Uuid\Uuid::uuid4()->toString();
 
@@ -30,9 +31,9 @@ class PerformanceTest extends TestCase
             }
 
             if ($i%10 == 0) {
-                $AggregateProjectionRepository->load(
+                $aggregateProjectionRepository->load(
                     new AggregateRootId($aggregateRootId),
-                    IntegrationTestAggregateRoot::class
+                    PerformanceTestAggregateRoot::class
                 );
 
                 \Illuminate\Support\Facades\Storage::disk('local')
@@ -42,14 +43,15 @@ class PerformanceTest extends TestCase
     }
 
     /**
-     * test
+     * @test
      */
     public function performance_single_aggregate_caching_integration_test()
     {
         $eventStore = new \ESFoundation\ES\InMemoryNonAtomicEventStore();
-        $AggregateProjectionRepository = new \ESFoundation\ES\InMemoryCachingAggregateProjectionRepository($eventStore);
+        $aggregateProjectionRepository = new \ESFoundation\ES\InMemoryCachingAggregateProjectionRepository($eventStore);
         $commandBus = new \ESFoundation\CQRS\InMemorySynchronusCommandBus();
-        $commandHandler = new PerformanceTestCommandHandler($AggregateProjectionRepository, $eventStore);
+        $eventBus = new \ESFoundation\ES\InMemorySynchronusEventBus($eventStore);
+        $commandHandler = new PerformanceTestCommandHandler($eventBus, $aggregateProjectionRepository);
         $commandBus->subscribe($commandHandler, PerformanceTestCommand::class);
         $aggregateRootId = \Ramsey\Uuid\Uuid::uuid4()->toString();
 
@@ -66,9 +68,9 @@ class PerformanceTest extends TestCase
                 );
             }
 
-            $AggregateProjectionRepository->load(
+            $aggregateProjectionRepository->load(
                 new AggregateRootId($aggregateRootId),
-                IntegrationTestAggregateRoot::class
+                PerformanceTestAggregateRoot::class
             );
 
             if ($i%10 == 0) {
@@ -79,14 +81,15 @@ class PerformanceTest extends TestCase
     }
 
     /**
-     * test
+     * @test
      */
     public function performance_multiple_aggregate_no_caching_integration_test()
     {
         $eventStore = new \ESFoundation\ES\InMemoryNonAtomicEventStore();
-        $AggregateProjectionRepository = new \ESFoundation\ES\NonCachingAggregateProjectionRepository($eventStore);
+        $aggregateProjectionRepository = new \ESFoundation\ES\NonCachingAggregateProjectionRepository($eventStore);
         $commandBus = new \ESFoundation\CQRS\InMemorySynchronusCommandBus();
-        $commandHandler = new PerformanceTestCommandHandler($AggregateProjectionRepository, $eventStore);
+        $eventBus = new \ESFoundation\ES\InMemorySynchronusEventBus($eventStore);
+        $commandHandler = new PerformanceTestCommandHandler($eventBus, $aggregateProjectionRepository);
         $commandBus->subscribe($commandHandler, PerformanceTestCommand::class);
 
         \Illuminate\Support\Facades\Storage::disk('local')->put('performance_multiple_aggregate_no_caching_integration_test.csv', 'nr,time,events');
@@ -107,9 +110,9 @@ class PerformanceTest extends TestCase
 
             if ($i%10 == 0) {
                 foreach ($aggregateRootId as $agri){
-                    $AggregateProjectionRepository->load(
+                    $aggregateProjectionRepository->load(
                         new AggregateRootId($agri),
-                        IntegrationTestAggregateRoot::class
+                        PerformanceTestAggregateRoot::class
                     );
                 }
 
@@ -120,14 +123,15 @@ class PerformanceTest extends TestCase
     }
 
     /**
-     * test
+     * @test
      */
     public function performance_multiple_aggregate_caching_integration_test()
     {
         $eventStore = new \ESFoundation\ES\InMemoryNonAtomicEventStore();
-        $AggregateProjectionRepository = new \ESFoundation\ES\InMemoryCachingAggregateProjectionRepository($eventStore);
+        $aggregateProjectionRepository = new \ESFoundation\ES\InMemoryCachingAggregateProjectionRepository($eventStore);
         $commandBus = new \ESFoundation\CQRS\InMemorySynchronusCommandBus();
-        $commandHandler = new PerformanceTestCommandHandler($AggregateProjectionRepository, $eventStore);
+        $eventBus = new \ESFoundation\ES\InMemorySynchronusEventBus($eventStore);
+        $commandHandler = new PerformanceTestCommandHandler($eventBus, $aggregateProjectionRepository);
         $commandBus->subscribe($commandHandler, PerformanceTestCommand::class);
 
         \Illuminate\Support\Facades\Storage::disk('local')->put('performance_multiple_aggregate_caching_integration_test.csv', 'nr,time,events');
@@ -148,9 +152,9 @@ class PerformanceTest extends TestCase
 
             if ($i%10 == 0) {
                 foreach ($aggregateRootId as $agri){
-                    $AggregateProjectionRepository->load(
+                    $aggregateProjectionRepository->load(
                         new AggregateRootId($agri),
-                        IntegrationTestAggregateRoot::class
+                        PerformanceTestAggregateRoot::class
                     );
                 }
 
@@ -161,14 +165,15 @@ class PerformanceTest extends TestCase
     }
 
     /**
-     * test
+     * @test
      */
     public function performance_multiple_aggregate_one_event_no_caching_integration_test()
     {
         $eventStore = new \ESFoundation\ES\InMemoryNonAtomicEventStore();
-        $AggregateProjectionRepository = new \ESFoundation\ES\NonCachingAggregateProjectionRepository($eventStore);
+        $aggregateProjectionRepository = new \ESFoundation\ES\NonCachingAggregateProjectionRepository($eventStore);
         $commandBus = new \ESFoundation\CQRS\InMemorySynchronusCommandBus();
-        $commandHandler = new PerformanceTestCommandHandler($AggregateProjectionRepository, $eventStore);
+        $eventBus = new \ESFoundation\ES\InMemorySynchronusEventBus($eventStore);
+        $commandHandler = new PerformanceTestCommandHandler($eventBus, $aggregateProjectionRepository);
         $commandBus->subscribe($commandHandler, PerformanceTestCommand::class);
 
         \Illuminate\Support\Facades\Storage::disk('local')->put('performance_multiple_aggregate_one_event_no_caching_integration_test.csv', 'nr,time,events');
@@ -186,9 +191,9 @@ class PerformanceTest extends TestCase
 
             if ($i%100 == 0) {
                 foreach ($aggregateRootId as $agid) {
-                    $AggregateProjectionRepository->load(
+                    $aggregateProjectionRepository->load(
                         new AggregateRootId($agid),
-                        IntegrationTestAggregateRoot::class
+                        PerformanceTestAggregateRoot::class
                     );
                 }
 
@@ -199,14 +204,15 @@ class PerformanceTest extends TestCase
     }
 
     /**
-     * test
+     * @test
      */
     public function performance_multiple_aggregate_one_event_caching_integration_test()
     {
         $eventStore = new \ESFoundation\ES\InMemoryNonAtomicEventStore();
-        $AggregateProjectionRepository = new \ESFoundation\ES\InMemoryCachingAggregateProjectionRepository($eventStore);
+        $aggregateProjectionRepository = new \ESFoundation\ES\InMemoryCachingAggregateProjectionRepository($eventStore);
         $commandBus = new \ESFoundation\CQRS\InMemorySynchronusCommandBus();
-        $commandHandler = new PerformanceTestCommandHandler($AggregateProjectionRepository, $eventStore);
+        $eventBus = new \ESFoundation\ES\InMemorySynchronusEventBus($eventStore);
+        $commandHandler = new PerformanceTestCommandHandler($eventBus, $aggregateProjectionRepository);
         $commandBus->subscribe($commandHandler, PerformanceTestCommand::class);
 
         \Illuminate\Support\Facades\Storage::disk('local')->put('performance_multiple_aggregate_one_event_caching_integration_test.csv', 'nr,time,events');
@@ -224,9 +230,9 @@ class PerformanceTest extends TestCase
 
             if ($i%100 == 0) {
                 foreach ($aggregateRootId as $agid) {
-                    $AggregateProjectionRepository->load(
+                    $aggregateProjectionRepository->load(
                         new AggregateRootId($agid),
-                        IntegrationTestAggregateRoot::class
+                        PerformanceTestAggregateRoot::class
                     );
                 }
 
@@ -239,40 +245,33 @@ class PerformanceTest extends TestCase
 
 class PerformanceTestCommandHandler extends \ESFoundation\CQRS\CommandHandler
 {
-    private $AggregateProjectionRepository;
-    private $eventStore;
+    private $eventBus;
+    private $aggregateProjectionRepository;
 
-    function __construct(\ESFoundation\ES\AggregateProjectionRepository $AggregateProjectionRepository, \ESFoundation\ES\EventStore $eventStore)
+    function __construct(\ESFoundation\ES\Contracts\EventBus $eventBus, \ESFoundation\ES\Contracts\AggregateProjectionRepository $aggregateProjectionRepository)
     {
-        $this->AggregateProjectionRepository = $AggregateProjectionRepository;
-        $this->eventStore = $eventStore;
+        $this->aggregateProjectionRepository = $aggregateProjectionRepository;
+        $this->eventBus = $eventBus;
     }
 
     public function handlePerformanceTestCommand(PerformanceTestCommand $command)
     {
-        $testAggregate = $this->AggregateProjectionRepository->load(
+        $testAggregateValue = $this->aggregateProjectionRepository->load(
             new AggregateRootId($command->aggregateRootId),
             PerformanceTestAggregateRoot::class
         );
 
-        if (!$testAggregate) {
-            $this->eventStore->push(
-                \ESFoundation\ES\DomainEventStream::wrap(
-                    new PerformanceTestEvent(new AggregateRootId($command->aggregateRootId), ['test' => $command->test])
-                )
+        if (!$testAggregateValue) {
+            $this->eventBus->dispatch(
+                PerformanceTestEvent::wraped(new AggregateRootId($command->aggregateRootId), ['test' => $command->test])
             );
-            return;
+            return true;
         }
 
-        $testAggregate->applyThat(
-            \ESFoundation\ES\DomainEventStream::wrap(
-                new PerformanceTestEvent(null, ['test' => $command->test])
-            )
-        );
+        PerformanceTestAggregateRoot::applyOn($testAggregateValue)->that(PerformanceTestEvent::wraped(null, ['test' => $command->test]));
 
-        $this->eventStore->push(
-            $testAggregate->popUncommittedEvents()
-        );
+        $this->eventBus->dispatch($testAggregateValue->popUncommittedEvents());
+        return true;
     }
 }
 
@@ -299,19 +298,10 @@ class PerformanceTestEvent extends \ESFoundation\ES\DomainEvent
 
 class PerformanceTestAggregateRoot extends \ESFoundation\ES\EventSourcedAggregateRoot
 {
-    private $test = '';
-
-    public function applyThatPerformanceTestEvent(PerformanceTestEvent $testEvent)
+    public static function applyThatPerformanceTestEvent(PerformanceTestEvent $testEvent, \ESFoundation\ES\ValueObjects\AggregateRootProjection $aggregateRootProjection)
     {
-        $this->test = $testEvent->test;
-    }
-
-    /**
-     * @return string
-     */
-    public function getTest(): string
-    {
-        return $this->test;
+        $aggregateRootProjection->put('test', $testEvent->test);
+        return true;
     }
 }
 
@@ -319,6 +309,24 @@ class PerformanceTestAggregateRootValidator implements \ESFoundation\ES\Contract
 {
     public static function validate(\ESFoundation\ES\ValueObjects\AggregateRootProjection $aggregateRoot, \ESFoundation\ES\DomainEvent $domainEvent): bool
     {
-        return $aggregateRoot->getTest() !== $domainEvent->getPayload()['test'];
+        return $aggregateRoot->test !== $domainEvent->test;
+    }
+}
+
+class PerformanceTestAggregateRootValues extends \ESFoundation\ES\ValueObjects\AggregateRootProjection {
+
+    public static function valueObjects(): \Illuminate\Support\Collection
+    {
+        return collect([
+            'test' => PerformanceTestValueObject::class
+        ]);
+    }
+}
+
+class PerformanceTestValueObject extends \ESFoundation\ValueObjects\ValueObject {
+
+    public static function rules(): string
+    {
+        return 'integer';
     }
 }

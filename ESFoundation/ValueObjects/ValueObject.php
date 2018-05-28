@@ -47,7 +47,7 @@ abstract class ValueObject
 
     public function __toString()
     {
-        return $this->value;
+        return '' . $this->value;
     }
 
     abstract public static function rules(): string;

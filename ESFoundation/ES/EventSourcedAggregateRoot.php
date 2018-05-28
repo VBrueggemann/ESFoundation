@@ -15,6 +15,7 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
 {
     protected static $handleMethods = [];
     protected static $validator;
+    protected static $projection;
     private $aggregateRootProjection;
 
     private function __construct(AggregateRootProjection $aggregateRootProjection)
@@ -47,7 +48,7 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
     public static function initialize(DomainEventStream $domainEventStream, bool $withValidation = false, bool $pushToUncommittedEvents = false): AggregateRootProjection
     {
         $self = get_called_class();
-        $className = $self . 'Values';
+        $className = $self::$projection ?? $self . 'Values';
         $aggregateRootProjection = new $className($domainEventStream->first()->getAggregateRootId());
 
         if ($withValidation){
@@ -102,7 +103,8 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
 
         $classParts = explode('\\', get_class($domainEvent));
 
-        return 'applyThat' . end($classParts);
+        return 'applyThat' . end($classParts);        $eventBus->subscribe($aggregateProjectionRepository);
+
     }
 
     protected static function getValidator()

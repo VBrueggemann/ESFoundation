@@ -15,9 +15,27 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
 {
     protected static $handleMethods = [];
     protected static $validator;
+    private $aggregateRootProjection;
 
-    private function __construct()
+    private function __construct(AggregateRootProjection $aggregateRootProjection)
     {
+        $this->aggregateRootProjection = $aggregateRootProjection;
+    }
+
+    /**
+     * @param AggregateRootProjection $aggregateRootProjection
+     * @return
+     */
+    public static function applyOn(AggregateRootProjection $aggregateRootProjection): EventSourcedAggregateRoot
+    {
+        $self = get_called_class();
+        return new $self($aggregateRootProjection);
+    }
+
+    public function that(DomainEventStream $domainEventStream): EventSourcedAggregateRoot
+    {
+        self::applyThat($domainEventStream, $this->aggregateRootProjection);
+        return $this;
     }
 
     public static function applyThat(DomainEventStream $domainEventStream, AggregateRootProjection $aggregateRootProjection): void
@@ -26,7 +44,7 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
         self::represent($domainEventStream, $aggregateRootProjection);
     }
 
-    public static function initialize(DomainEventStream $domainEventStream, bool $withValidation = false): AggregateRootProjection
+    public static function initialize(DomainEventStream $domainEventStream, bool $withValidation = false, bool $pushToUncommittedEvents = false): AggregateRootProjection
     {
         $self = get_called_class();
         $className = $self . 'Values';
@@ -35,7 +53,7 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
         if ($withValidation){
             $self::validate($domainEventStream, $aggregateRootProjection);
         }
-        $self::represent($domainEventStream, $aggregateRootProjection, false);
+        $self::represent($domainEventStream, $aggregateRootProjection, $pushToUncommittedEvents);
 
         return $aggregateRootProjection;
     }

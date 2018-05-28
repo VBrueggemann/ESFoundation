@@ -9,12 +9,13 @@ class IntegrationTest extends TestCase
      */
     public function a_command_can_change_state()
     {
-        $eventStore = new \ESFoundation\ES\InMemoryNonAtomicEventStore();
-        $aggregateProjectionRepository = new \ESFoundation\ES\InMemoryCachingAggregateProjectionRepository($eventStore);
-        $eventBus = new IntegrationTestEventBus($eventStore, $aggregateProjectionRepository);
-        $commandBus = new \ESFoundation\CQRS\InMemorySynchronusCommandBus();
+        $aggregateProjectionRepository = app(\ESFoundation\ES\Contracts\AggregateProjectionRepository::class);
+        $eventBus = app(\ESFoundation\ES\Contracts\EventBus::class);
+        $eventBus->subscribe($aggregateProjectionRepository);
+        $commandBus = app(\ESFoundation\CQRS\Contracts\CommandBus::class);
         $commandHandler = new IntegrationTestCommandHandler($eventBus, $aggregateProjectionRepository);
         $commandBus->subscribe($commandHandler, IntegrationTestCommand::class);
+
         $aggregateRootId = \Ramsey\Uuid\Uuid::uuid4()->toString();
 
         $commandBus->dispatch(
@@ -99,7 +100,9 @@ class IntegrationTestCommandHandler extends \ESFoundation\CQRS\CommandHandler
             return true;
         }
 
-        IntegrationTestAggregateRoot::applyThat(IntegrationTestEvent::wraped(null, ['test' => $command->test]), $testAggregateValue);
+        IntegrationTestAggregateRoot::applyOn($testAggregateValue)->that(IntegrationTestEvent::wraped(null, ['test' => $command->test]));
+
+//        IntegrationTestAggregateRoot::applyThat(IntegrationTestEvent::wraped(null, ['test' => $command->test]), $testAggregateValue);
 
         $this->eventBus->dispatch($testAggregateValue->popUncommittedEvents());
         return true;
@@ -141,23 +144,6 @@ class IntegrationTestAggregateRootValidator implements \ESFoundation\ES\Contract
     public static function validate(\ESFoundation\ES\ValueObjects\AggregateRootProjection $aggregateRoot, \ESFoundation\ES\DomainEvent $domainEvent): bool
     {
         return $aggregateRoot->test !== $domainEvent->test;
-    }
-}
-
-class IntegrationTestEventBus extends \ESFoundation\ES\InMemorySynchronusEventBus {
-    private $eventStore;
-
-    public function __construct(\ESFoundation\ES\Contracts\EventStore $eventStore, \ESFoundation\ES\Contracts\AggregateProjectionRepository $aggregateProjectionRepository = null)
-    {
-        parent::__construct();
-        $this->eventStore = $eventStore;
-        $this->subscribe($aggregateProjectionRepository);
-    }
-
-    public function dispatch(\ESFoundation\ES\DomainEventStream $domainEventStream)
-    {
-        parent::dispatch($domainEventStream);
-        $this->eventStore->push($domainEventStream);
     }
 }
 

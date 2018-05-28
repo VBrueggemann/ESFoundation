@@ -4,16 +4,22 @@ namespace ESFoundation\ES;
 
 use ESFoundation\ES\Contracts\EventBus;
 use ESFoundation\ES\Contracts\EventListener as EventListenerContract;
+use ESFoundation\ES\Contracts\EventStore;
 
 class InMemorySynchronusEventBus implements EventBus
 {
     private $globalEventListeners;
     private $specificEventListeners;
+    private $eventStore;
 
-    public function __construct()
+    public function __construct(EventStore $eventStore = null, EventListenerContract $listener = null)
     {
         $this->globalEventListeners = collect();
         $this->specificEventListeners = collect();
+        $this->eventStore = $eventStore;
+        if ($listener) {
+            $this->subscribe($listener);
+        }
     }
 
     public function dispatch(DomainEventStream $domainEventStream)
@@ -31,6 +37,10 @@ class InMemorySynchronusEventBus implements EventBus
                 $eventListener->handle($domainEvent);
             });
         });
+
+        if ($this->eventStore) {
+            $this->eventStore->push($domainEventStream);
+        }
     }
 
     public function subscribe(EventListenerContract $eventListener, string $domainEvent = null)

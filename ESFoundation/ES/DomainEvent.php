@@ -34,7 +34,7 @@ abstract class DomainEvent extends StorageEvent implements PayloadableContract
         Carbon $createdAt = null
     )
     {
-        $this->id = $id ?? $this->id = Uuid::uuid4()->toString();
+        $this->id = $id ?: new DomainEventId(Uuid::uuid4()->toString());
         $this->aggregateRootId = $aggregateRootId;
 
         $this->setPayload($payload, InvalidEventPayloadException::class);
@@ -48,28 +48,27 @@ abstract class DomainEvent extends StorageEvent implements PayloadableContract
         return $this->payload->toArray();
     }
 
-    public function serialize()
+    public function serialize(bool $withAggregateRootId = false)
     {
         return serialize((new DomainStorageEvent(
             $this->aggregateRootId,
-            new DomainEventId($this->id),
-            $this->createdAt,
+            $this->id,
+            $this->createdAt ?: Carbon::now(),
             $this->playhead,
             $this->serializePayload(),
             get_class($this)
-        ))->toJson());
+        ))->toJson($withAggregateRootId));
     }
 
     public static function deserializePayload(DomainStorageEvent $event)
     {
-        $domainEvent = new $event->class(
+        return (new $event->class(
             $event->getAggregateRootId(),
-            $event->getPayload()
-        );
-        $domainEvent->playhead = $event->getPlayhead();
-        $domainEvent->createdAt = $event->getCreatedAt();
-        $domainEvent->id = $event->getId();
-        return $domainEvent;
+            $event->getPayload(),
+            $event->getPlayhead(),
+            $event->getId(),
+            $event->getCreatedAt()
+        ));
     }
 
     /**

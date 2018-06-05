@@ -46,9 +46,9 @@ class DomainStorageEvent extends StorageEvent
         return $this->payload;
     }
 
-    public function toJson()
+    public function toJson(bool $withAggregateRootId)
     {
-        return '{"id":' . json_encode($this->id->value) . ',"playhead":"' . $this->playhead . '","payload":' . json_encode($this->payload) . ',"created_at":' . json_encode($this->createdAt->toW3cString()) . ',"class":"' . str_replace('\\', '\\\\', $this->class) . '"}';
+        return '{"id":' . json_encode($this->id->value) . ',"playhead":"' . $this->playhead . '","payload":' . json_encode($this->payload) . ',"created_at":' . json_encode($this->createdAt->toW3cString()) . ',"class":"' . str_replace('\\', '\\\\', $this->class) . '"' . ($withAggregateRootId ? ',"aggregate_root_id":"' . $this->aggregateRootId->value . '"' : '') . '}';
     }
 
     public static function fromJson(AggregateRootId $aggregateRootId, string $json)

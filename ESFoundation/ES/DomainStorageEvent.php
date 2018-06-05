@@ -21,7 +21,7 @@ class DomainStorageEvent extends StorageEvent
      * @param $payload
      * @param $class
      */
-    public function __construct(AggregateRootId $aggregateRootId, DomainEventId $id, Carbon $createdAt, int $playhead, $payload, string $class)
+    public function __construct(AggregateRootId $aggregateRootId, DomainEventId $id, Carbon $createdAt, int $playhead, array $payload, string $class)
     {
         parent::__construct($id, $createdAt, $playhead);
 
@@ -44,5 +44,23 @@ class DomainStorageEvent extends StorageEvent
     public function getPayload()
     {
         return $this->payload;
+    }
+
+    public function toJson()
+    {
+        return '{"id":' . json_encode($this->id->value) . ',"playhead":"' . $this->playhead . '","payload":' . json_encode($this->payload) . ',"created_at":' . json_encode($this->createdAt->toW3cString()) . ',"class":"' . str_replace('\\', '\\\\', $this->class) . '"}';
+    }
+
+    public static function fromJson(AggregateRootId $aggregateRootId, string $json)
+    {
+        $json = json_decode($json, true);
+        return new self(
+            $aggregateRootId,
+            new DomainEventId($json['id']),
+            Carbon::make($json['created_at']),
+            $json['playhead'],
+            $json['payload'],
+            $json['class']
+        );
     }
 }

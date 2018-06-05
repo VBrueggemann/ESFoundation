@@ -5,6 +5,7 @@ namespace ESFoundation\ES;
 use ESFoundation\ES\Contracts\EventBus;
 use ESFoundation\ES\Contracts\EventListener as EventListenerContract;
 use ESFoundation\ES\Contracts\EventStore;
+use ESFoundation\ES\ValueObjects\AggregateRootId;
 
 class InMemorySynchronusEventBus implements EventBus
 {
@@ -24,13 +25,14 @@ class InMemorySynchronusEventBus implements EventBus
 
     public function dispatch(DomainEventStream $domainEventStream)
     {
-        $domainEventStream->each(function ($domainEvent) {
-            $eventListener = $this->specificEventListeners->get(get_class($domainEvent));
-
-            if ($eventListener) {
-                $eventListener->handle($domainEvent);
-            }
-        });
+        $aggregateRootIdListeners = $this->specificEventListeners->get($domainEventStream->first()->getAggregateRootId()->value);
+        if ($aggregateRootIdListeners) {
+            $domainEventStream->each(function ($domainEvent) use ($aggregateRootIdListeners) {
+                $aggregateRootIdListeners->each(function ($listener) use ($domainEvent){
+                    $listener->handle($domainEvent);
+                });
+            });
+        }
 
         $this->globalEventListeners->each(function ($eventListener) use ($domainEventStream) {
             $domainEventStream->each(function ($domainEvent) use ($eventListener) {
@@ -43,10 +45,15 @@ class InMemorySynchronusEventBus implements EventBus
         }
     }
 
-    public function subscribe(EventListenerContract $eventListener, string $domainEvent = null)
+    public function subscribe(EventListenerContract $eventListener, AggregateRootId $aggregateRootId = null)
     {
-        if ($domainEvent) {
-            $this->specificEventListeners->put($domainEvent, $eventListener);
+        if ($aggregateRootId) {
+            $aggregateRootIdListeners = $this->specificEventListeners->get($aggregateRootId->value);
+            if ($aggregateRootIdListeners) {
+                $aggregateRootIdListeners->push($eventListener);
+                return;
+            }
+            $this->specificEventListeners->put($aggregateRootId->value, collect([$eventListener]));
             return;
         }
         $this->globalEventListeners->push($eventListener);

@@ -15,7 +15,6 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
 {
     protected static $handleMethods = [];
     protected static $validator;
-    protected static $projection;
     private $aggregateRootProjection;
 
     private function __construct(AggregateRootProjection $aggregateRootProjection)
@@ -25,7 +24,7 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
 
     /**
      * @param AggregateRootProjection $aggregateRootProjection
-     * @return
+     * @return EventSourcedAggregateRoot
      */
     public static function applyOn(AggregateRootProjection $aggregateRootProjection): EventSourcedAggregateRoot
     {
@@ -45,16 +44,16 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
         self::represent($domainEventStream, $aggregateRootProjection);
     }
 
-    public static function initialize(DomainEventStream $domainEventStream, bool $withValidation = false, bool $pushToUncommittedEvents = false): AggregateRootProjection
+    public static function initialize(DomainEventStream $domainEventStream, bool $withValidation = false): AggregateRootProjection
     {
         $self = get_called_class();
-        $className = $self::$projection ?? $self . 'Values';
+        $className = $self . 'Values';
         $aggregateRootProjection = new $className($domainEventStream->first()->getAggregateRootId());
 
         if ($withValidation){
             $self::validate($domainEventStream, $aggregateRootProjection);
         }
-        $self::represent($domainEventStream, $aggregateRootProjection, $pushToUncommittedEvents);
+        $self::represent($domainEventStream, $aggregateRootProjection, false);
 
         return $aggregateRootProjection;
     }
@@ -103,8 +102,7 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
 
         $classParts = explode('\\', get_class($domainEvent));
 
-        return 'applyThat' . end($classParts);        $eventBus->subscribe($aggregateProjectionRepository);
-
+        return 'applyThat' . end($classParts);
     }
 
     protected static function getValidator()

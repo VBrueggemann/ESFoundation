@@ -9,9 +9,9 @@ class EventBusUnitTest extends TestCase
     {
         $eventBus = new \ESFoundation\ES\InMemorySynchronusEventBus();
         $eventListener = new \tests\TestEventListener();
-        $eventBus->subscribe($eventListener, \tests\TestEvent::class);
-
         $aggregateRootId = new \ESFoundation\ES\ValueObjects\AggregateRootId(\Ramsey\Uuid\Uuid::uuid4()->toString());
+
+        $eventBus->subscribe($eventListener, $aggregateRootId);
 
         $event = new \tests\TestEvent($aggregateRootId, ['test' => 'test']);
         $eventBus->dispatch(ESFoundation\ES\DomainEventStream::wrap($event));
@@ -39,11 +39,14 @@ class EventBusUnitTest extends TestCase
     /**
      * @test
      */
-    public function an_event_handler_can_be_subscribed_to_specific_events()
+    public function an_event_handler_can_be_subscribed_to_specific_aggregates()
     {
         $eventBus = new \ESFoundation\ES\InMemorySynchronusEventBus();
         $eventListener = new \tests\TestEventListener();
-        $eventBus->subscribe($eventListener, 'tests\OtherTestEvent');
+
+        $aggregateRootIdOther = new \ESFoundation\ES\ValueObjects\AggregateRootId(\Ramsey\Uuid\Uuid::uuid4()->toString());
+
+        $eventBus->subscribe($eventListener, $aggregateRootIdOther);
 
         $aggregateRootId = new \ESFoundation\ES\ValueObjects\AggregateRootId(\Ramsey\Uuid\Uuid::uuid4()->toString());
 

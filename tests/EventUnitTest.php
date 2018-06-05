@@ -32,10 +32,10 @@ class EventUnitTest extends TestCase
      */
     public function an_events_payload_is_serializable()
     {
-        $payload = collect([
+        $payload = [
             'first' => 'one',
             'second' => 'two'
-        ]);
+        ];
 
         $aggregateRootId = new \ESFoundation\ES\ValueObjects\AggregateRootId(\Ramsey\Uuid\Uuid::uuid4()->toString());
 
@@ -44,7 +44,7 @@ class EventUnitTest extends TestCase
             $payload
         );
 
-        $this->assertEquals(serialize($payload->toJson()), $event->serializePayload());
+        $this->assertEquals($payload, $event->serializePayload());
     }
 
     /**
@@ -58,10 +58,10 @@ class EventUnitTest extends TestCase
 
         $createdAt = \Illuminate\Support\Carbon::now();
 
-        $payload = serialize(collect([
+        $payload = [
             'first' => 'one',
             'second' => 'two'
-        ])->toJson());
+        ];
 
         $domainStorageEvent = new \ESFoundation\ES\DomainStorageEvent(
             $aggregateRootId,

@@ -12,6 +12,8 @@ use ESFoundation\ES\InMemoryCachingAggregateProjectionRepository;
 use ESFoundation\ES\InMemoryNonAtomicEventStore;
 use ESFoundation\ES\InMemoryQueryRepository;
 use ESFoundation\ES\InMemorySynchronusEventBus;
+use ESFoundation\ES\RedisCachingAggregateProjectionRepository;
+use ESFoundation\ES\RedisEventStore;
 use Illuminate\Support\ServiceProvider;
 
 class ESFoundationServiceProvider extends ServiceProvider
@@ -32,12 +34,14 @@ class ESFoundationServiceProvider extends ServiceProvider
         $this->app->singleton(EventStore::class, function ($app) {
             switch (env('EVENT_STORE', 'memory')) {
                 case 'memory': return new InMemoryNonAtomicEventStore();
+                case 'redis': return new RedisEventStore();
             }
         });
 
         $this->app->singleton(AggregateProjectionRepository::class, function ($app) {
             switch (env('AGGREGATE_REPOSITORY', 'memory')) {
                 case 'memory': return new InMemoryCachingAggregateProjectionRepository($app->make(EventStore::class));
+                case 'redis': return new RedisCachingAggregateProjectionRepository($app->make(EventStore::class));
             }
         });
 

@@ -11,7 +11,7 @@ class IntegrationTest extends TestCase
     {
         $aggregateProjectionRepository = ESF::aggregateProjectionRepository();
         $eventBus = ESF::eventBus();
-        $eventBus->subscribe($aggregateProjectionRepository);
+        // $eventBus->subscribe($aggregateProjectionRepository);
         $commandBus = ESF::commandBus();
         $commandHandler = new IntegrationTestCommandHandler($eventBus, $aggregateProjectionRepository);
         $commandBus->subscribe($commandHandler, IntegrationTestCommand::class);

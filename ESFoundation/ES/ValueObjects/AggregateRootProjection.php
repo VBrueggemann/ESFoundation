@@ -7,6 +7,7 @@ use ESFoundation\ES\DomainEventStream;
 use ESFoundation\ES\Errors\DuplicatePlayhead;
 use ESFoundation\ValueObjects\GroupedValueObject;
 use Illuminate\Support\Collection;
+use Serializable;
 
 abstract class AggregateRootProjection extends GroupedValueObject
 {
@@ -21,6 +22,30 @@ abstract class AggregateRootProjection extends GroupedValueObject
         $this->uncommittedEvents = DomainEventStream::make();
         $this->aggregateRoot = $aggregateRoot ?: substr(get_class($this), 0, -6);
         parent::__construct($values);
+    }
+
+    public function serialize()
+    {
+        $values = $this->values->map(function ($item, $key){
+            if ($item instanceof GroupedValueObject) {
+                return $item->serialize();
+            }
+            return $item->value;
+        });
+        return serialize(collect([
+            'values' => $values,
+            'aggregateRootId' => $this->aggregateRootId,
+            'playhead' => $this->playhead,
+            'aggregateRoot' => $this->aggregateRoot,
+            'class' => get_class($this),
+        ])->toJson());
+    }
+
+    public static function deserialize($serialized)
+    {
+        $json = json_decode(unserialize($serialized), true);
+        $class = $json['class'];
+        return new $class(new AggregateRootId($json['aggregateRootId']), collect($json['values']));
     }
 
     public function popUncommittedEvents(): DomainEventStream

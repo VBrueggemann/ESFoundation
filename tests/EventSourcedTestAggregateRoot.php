@@ -5,6 +5,7 @@ namespace tests;
 use ESFoundation\ES\DomainEventStream;
 use ESFoundation\ES\EventSourcedAggregateRoot;
 use ESFoundation\ES\ValueObjects\AggregateRootId;
+use Illuminate\Support\Collection;
 use Ramsey\Uuid\Uuid;
 
 class EventSourcedTestAggregateRoot extends EventSourcedAggregateRoot

@@ -8,6 +8,7 @@ use ESFoundation\Traits\Payloadable;
 use ESFoundation\Traits\PayloadableContract;
 use Illuminate\Support\Carbon;
 use Ramsey\Uuid\Uuid;
+use Serializable;
 
 abstract class DomainEvent extends StorageEvent implements PayloadableContract
 {
@@ -44,14 +45,26 @@ abstract class DomainEvent extends StorageEvent implements PayloadableContract
 
     public function serializePayload()
     {
-        return serialize($this->payload->toJson());
+        return $this->payload->toArray();
+    }
+
+    public function serialize()
+    {
+        return serialize((new DomainStorageEvent(
+            $this->aggregateRootId,
+            new DomainEventId($this->id),
+            $this->createdAt,
+            $this->playhead,
+            $this->serializePayload(),
+            get_class($this)
+        ))->toJson());
     }
 
     public static function deserializePayload(DomainStorageEvent $event)
     {
         $domainEvent = new $event->class(
             $event->getAggregateRootId(),
-            collect(json_decode(unserialize($event->getPayload())))
+            $event->getPayload()
         );
         $domainEvent->playhead = $event->getPlayhead();
         $domainEvent->createdAt = $event->getCreatedAt();

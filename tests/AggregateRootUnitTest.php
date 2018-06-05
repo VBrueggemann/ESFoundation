@@ -1,6 +1,7 @@
 <?php
 
 use ESFoundation\ES\ValueObjects\AggregateRootId;
+use ESFoundation\ES\ValueObjects\AggregateRootProjection;
 
 class AggregateRootUnitTest extends TestCase
 {
@@ -73,5 +74,20 @@ class AggregateRootUnitTest extends TestCase
         }
 
         $this->assertTrue(false);
+    }
+
+    /**
+     * @test
+     */
+    public function an_aggregate_root_projection_is_serializable()
+    {
+        $aggregateRootValues = \tests\EventSourcedTestAggregateRoot::makeNewEventSourcedTestAggregateRoot(collect(['first' => 'one','second' => 'two']));
+        $aggregateRootValues->popUncommittedEvents();
+
+        $serialized = $aggregateRootValues->serialize();
+        $deserialized = AggregateRootProjection::deserialize($serialized);
+
+        $this->assertEquals($deserialized->first, $aggregateRootValues->first);
+        $this->assertEquals($deserialized->second, $aggregateRootValues->second);
     }
 }

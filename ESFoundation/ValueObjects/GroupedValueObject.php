@@ -62,4 +62,15 @@ abstract class GroupedValueObject
         $class = get_class($this);
         return new $class(new AggregateRootId($this->getAggregateRootId()), $values);
     }
+
+    public function serialize()
+    {
+        $values = $this->values->map(function ($item, $key){
+            if ($item instanceof GroupedValueObject) {
+                return $item->serialize();
+            }
+            return $item->value;
+        });
+        return $values->toJson();
+    }
 }

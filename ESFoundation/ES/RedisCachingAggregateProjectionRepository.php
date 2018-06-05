@@ -9,11 +9,11 @@ use ESFoundation\ES\Contracts\EventStore;
 use ESFoundation\ES\Errors\NoAggregateRoot;
 use ESFoundation\ES\ValueObjects\AggregateRootId;
 use ESFoundation\ES\ValueObjects\AggregateRootProjection;
+use Illuminate\Support\Facades\Redis;
 
-class InMemoryCachingAggregateProjectionRepository implements AggregateProjectionRepository, EventListener
+class RedisCachingAggregateProjectionRepository implements AggregateProjectionRepository
 {
     private $eventStore;
-    private $cachedAggregateValues = [];
 
     function __construct(EventStore $eventStore)
     {
@@ -31,13 +31,16 @@ class InMemoryCachingAggregateProjectionRepository implements AggregateProjectio
             return $aggregateRootClass::initialize($domainEventStream->take($playhead));
         }
 
-        if (key_exists($aggregateRootId->value, $this->cachedAggregateValues)) {
-            $cached = $this->cachedAggregateValues[$aggregateRootId->value];
-            $unappliedEvents = $this->eventStore->get($aggregateRootId, $cached->getPlayhead() + 1);
+        $redis = Redis::connection('aggregates');
+
+        if (($cachedSerialized = $redis->get($aggregateRootId->value))) {
+            $cachedAggregate = AggregateRootProjection::deserialize($cachedSerialized);
+            $unappliedEvents = $this->eventStore->get($aggregateRootId, $cachedAggregate->getPlayhead + 1);
             if ($unappliedEvents->isNotEmpty()) {
-                $aggregateRootClass::represent($unappliedEvents, $cached, false);
+                $aggregateRootClass::represent($unappliedEvents, $cachedAggregate, false);
+                $redis->set($aggregateRootId->value, $cachedAggregate->serialize());
             }
-            return $cached->clone();
+            return $cachedAggregate;
         }
 
         $domainEventStream = $this->eventStore->get($aggregateRootId);
@@ -47,18 +50,7 @@ class InMemoryCachingAggregateProjectionRepository implements AggregateProjectio
         }
 
         $aggregateValues = $aggregateRootClass::initialize($domainEventStream);
-        $this->cachedAggregateValues[$aggregateRootId->value] = $aggregateValues;
-        return $aggregateValues->clone();
-    }
-
-    public function handle(DomainEvent $domainEvent)
-    {
-        $aggregateRootId = $domainEvent->getAggregateRootId()->value;
-
-        if (key_exists($aggregateRootId, $this->cachedAggregateValues)) {
-            $cached = $this->cachedAggregateValues[$aggregateRootId];
-            $aggregateRoot = $cached->getAggregateRoot();
-            $aggregateRoot::represent(DomainEventStream::wrap($domainEvent), $cached, false);
-        }
+        $redis->set($aggregateRootId->value, $aggregateValues->serialize());
+        return $aggregateValues;
     }
 }

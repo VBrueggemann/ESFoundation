@@ -25,6 +25,7 @@ $app = new Laravel\Lumen\Application(
 
 $app->withFacades();
 
+$app->configure('database');
 // $app->withEloquent();
 
 /*
@@ -82,8 +83,10 @@ $app->singleton('filesystem', function ($app) {
 |
 */
 
- $app->register(App\Providers\AppServiceProvider::class);
- $app->register(ESFoundation\ServiceProviders\ESFoundationServiceProvider::class);
+$app->register(App\Providers\AppServiceProvider::class);
+$app->register(\Illuminate\Redis\RedisServiceProvider::class);
+$app->register(ESFoundation\ServiceProviders\ESFoundationServiceProvider::class);
+$app->register(\Laravel\Tinker\TinkerServiceProvider::class);
 // $app->register(App\Providers\AuthServiceProvider::class);
 // $app->register(App\Providers\EventServiceProvider::class);
 

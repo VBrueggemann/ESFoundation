@@ -23,8 +23,11 @@ class InMemoryQueryRepository implements QueryRepository
 
     public function get($key, $index = -1)
     {
+        if (!key_exists($key, $this->queries)) {
+            return [];
+        }
         if ($index < 0) {
-            return array_last($this->queries[$key]);
+            return [array_last($this->queries[$key])];
         }
 
         return array_reverse($this->queries[$key])[$index];

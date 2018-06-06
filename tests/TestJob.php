@@ -16,6 +16,6 @@ class TestJob extends Job
 
     public function handle(QueryRepository $queryRepository)
     {
-        $queryRepository->add('test', $this->data ?? 'Data that took very long to process');
+        $queryRepository->add('test', $this->data ?: 'Data that took very long to process');
     }
 }

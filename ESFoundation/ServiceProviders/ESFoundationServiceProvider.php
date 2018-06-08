@@ -33,6 +33,7 @@ class ESFoundationServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        
         $this->commands([
             CreateCommandHandler::class,
             CreateCommand::class,

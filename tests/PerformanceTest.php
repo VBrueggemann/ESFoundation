@@ -2,7 +2,7 @@
 
 use ESFoundation\ES\ValueObjects\AggregateRootId;
 
-class PerformanceTest //extends TestCase
+class PerformanceTest extends TestCase
 {
     /**
      * test

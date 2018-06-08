@@ -1,0 +1,9 @@
+<?php
+namespace {{namespace}}ES\Commands\Handlers;
+
+use ESFoundation\CQRS\CommandHandler as CommandHandlerContract;{{imports}}
+
+class {{name}} extends CommandHandlerContract
+{
+    {{content}}
+}

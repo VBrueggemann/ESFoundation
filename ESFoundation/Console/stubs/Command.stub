@@ -1,0 +1,14 @@
+<?php
+namespace {{namespace}}ES\Commands;
+
+use ESFoundation\CQRS\Command;
+
+class {{name}} extends Command
+{
+    public function rules()
+    {
+        return [
+
+        ];
+    }
+}

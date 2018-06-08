@@ -4,6 +4,21 @@ use ESFoundation\ES\ValueObjects\AggregateRootId;
 
 class IntegrationTest extends TestCase
 {
+    public function setUp()
+    {
+        parent::setUp();
+        putenv('EVENT_STORE=redis');
+        putenv('AGGREGATE_REPOSITORY=redis');
+        putenv('EVENT_BUS=redis');
+    }
+
+    public function tearDown()
+    {
+        putenv('EVENT_STORE=memory');
+        putenv('AGGREGATE_REPOSITORY=memory');
+        putenv('EVENT_BUS=memory');
+    }
+
     /**
      * @test
      */

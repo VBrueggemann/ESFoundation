@@ -1,0 +1,10 @@
+<?php
+namespace {{namespace}}ES\Events\Aggregates;
+
+use ESFoundation\ES\EventSourcedAggregateRoot as AggregateRootContract;
+use ESFoundation\ES\ValueObjects\AggregateRootProjection;
+
+class {{name}} extends AggregateRootContract
+{
+    {{content}}
+}

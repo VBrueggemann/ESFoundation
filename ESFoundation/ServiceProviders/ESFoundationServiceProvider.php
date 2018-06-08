@@ -2,6 +2,12 @@
 
 namespace ESFoundation\ServiceProviders;
 
+use ESFoundation\Console\CreateAggregateRoot;
+use ESFoundation\Console\CreateAggregateRootProjection;
+use ESFoundation\Console\CreateAggregateRootValidator;
+use ESFoundation\Console\CreateCommand;
+use ESFoundation\Console\CreateCommandHandler;
+use ESFoundation\Console\CreateEvent;
 use ESFoundation\CQRS\Contracts\CommandBus;
 use ESFoundation\CQRS\InMemorySynchronusCommandBus;
 use ESFoundation\ES\Contracts\AggregateProjectionRepository;
@@ -27,6 +33,15 @@ class ESFoundationServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        $this->commands([
+            CreateCommandHandler::class,
+            CreateCommand::class,
+            CreateAggregateRoot::class,
+            CreateEvent::class,
+            CreateAggregateRootValidator::class,
+            CreateAggregateRootProjection::class
+        ]);
+
         $this->app->singleton(QueryRepository::class, function ($app) {
             switch (env('QUERY_REPOSITORY', 'memory')) {
                 case 'memory': return new InMemoryQueryRepository();

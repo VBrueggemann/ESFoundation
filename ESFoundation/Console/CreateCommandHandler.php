@@ -17,6 +17,7 @@ class CreateCommandHandler extends Command
     protected $signature = 'make:commandHandler
                             {--N|name=CommandHandler : Class Name}
                             {--C|command=* : Commands handled by this Class}
+                            {--c|createCommand : Create specified Commands}
                             {--P|path=} : Path to Class File
                             {--NS|namespace= : Namespace for Class}
                             {--E|eventBus} : Place EventBus in Constructor
@@ -58,15 +59,13 @@ class CreateCommandHandler extends Command
             $this->compileStub()
         );
 
-        if (empty($this->option('command')) || ! $this->confirm("Do you want to create the specified Commands?")) {
-            return;
-        }
-
-        foreach ($this->option('command') as $command) {
-            $this->call('make:command', [
-                '--name' => $command,
-                '--force' => $this->option('force')
-            ]);
+        if (!empty($this->option('command')) && ($this->option('createCommand') || $this->confirm("Do you want to create the specified Commands?"))) {
+            foreach ($this->option('command') as $command) {
+                $this->call('make:command', [
+                    '--name' => $command,
+                    '--force' => $this->option('force')
+                ]);
+            }
         }
     }
 

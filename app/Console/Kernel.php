@@ -3,6 +3,8 @@
 namespace App\Console;
 
 use ESFoundation\Console\CreateAggregateRoot;
+use ESFoundation\Console\CreateAggregateRootProjection;
+use ESFoundation\Console\CreateAggregateRootValidator;
 use ESFoundation\Console\CreateCommand;
 use ESFoundation\Console\CreateCommandHandler;
 use ESFoundation\Console\CreateEvent;
@@ -20,7 +22,9 @@ class Kernel extends ConsoleKernel
         CreateCommandHandler::class,
         CreateCommand::class,
         CreateAggregateRoot::class,
-        CreateEvent::class
+        CreateEvent::class,
+        CreateAggregateRootValidator::class,
+        CreateAggregateRootProjection::class
     ];
 
     /**

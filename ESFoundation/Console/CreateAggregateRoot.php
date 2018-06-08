@@ -16,8 +16,12 @@ class CreateAggregateRoot extends Command
     protected $signature = 'make:aggregateRoot
                             {--N|name=AggregateRoot : Class Name}
                             {--P|path=} : Path to Class File
-                            {--NS|namespace= : Namespace for Class}
-                            {--E|event=* : Applicable Event}'
+                            {--S|namespace= : Namespace for Class}
+                            {--E|event=* : Applicable Event}
+                            {--c|createEvent : Create Events for the specified AggregateRoot}
+                            {--F|force : Overwrite all files if necessary}
+                            {--a|validator : Create Validator for the specified AggregateRoot}
+                            {--p|projection : Create Projection for the specified AggregateRoot}'
     ;
 
     /**
@@ -44,7 +48,7 @@ class CreateAggregateRoot extends Command
             mkdir($directory, 0777, true);
         }
 
-        if (file_exists($directory . DIRECTORY_SEPARATOR . $this->option('name') . '.php')) {
+        if (! $this->option('force') && file_exists($directory . DIRECTORY_SEPARATOR . $this->option('name') . '.php')) {
             if (! $this->confirm("The  file [{$this->option('name')}] already exists. Do you want to replace it?")) {
                 return;
             }
@@ -54,6 +58,29 @@ class CreateAggregateRoot extends Command
             $directory . DIRECTORY_SEPARATOR . $this->option('name') . '.php',
             $this->compileStub()
         );
+
+        if (!empty($this->option('event')) && ($this->option('createEvent') || $this->confirm("Do you want to create the specified Events?"))) {
+            foreach ($this->option('event') as $event) {
+                $this->call('make:event', [
+                    '--name' => $event,
+                    '--force' => $this->option('force')
+                ]);
+            }
+        }
+
+        if ($this->option('validator') || $this->confirm("Do you want to create the corresponding AggregateRootValidator?")) {
+            $this->call('make:aggregateRootValidator', [
+                '--name' => $this->option('name') . 'Validator',
+                '--force' => $this->option('force')
+            ]);
+        }
+
+        if ($this->option('projection') || $this->confirm("Do you want to create the corresponding AggregateRootProjection?")) {
+            $this->call('make:aggregateRootProjection', [
+                '--name' => $this->option('name') . 'Values',
+                '--force' => $this->option('force')
+            ]);
+        }
     }
 
     protected function compileStub()

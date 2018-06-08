@@ -162,7 +162,7 @@ class IntegrationTestAggregateRootValidator implements \ESFoundation\ES\Contract
     }
 }
 
-class IntegrationTestAggregateRootValues extends \ESFoundation\ES\ValueObjects\AggregateRootProjection {
+class IntegrationTestAggregateRootProjection extends \ESFoundation\ES\ValueObjects\AggregateRootProjection {
 
     public static function valueObjects(): \Illuminate\Support\Collection
     {

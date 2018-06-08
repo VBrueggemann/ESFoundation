@@ -8,7 +8,7 @@ use ESFoundation\ES\ValueObjects\AggregateRootProjection;
 
 class EventSourcedTestAggregateRootValidator implements AggregateRootValidator
 {
-    public static function validate(AggregateRootProjection $aggregateRootValues, DomainEvent $domainEvent): bool
+    public static function validate(AggregateRootProjection $aggregateRootProjection, DomainEvent $domainEvent): bool
     {
         return $domainEvent->first !== 'second';
     }

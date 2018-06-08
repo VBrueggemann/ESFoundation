@@ -35,16 +35,16 @@ class AggregateRootUnitTest extends TestCase
      */
     public function an_event_can_be_applied_to_an_aggregate_root()
     {
-        $aggregateRootValues = \tests\EventSourcedTestAggregateRoot::makeNewEventSourcedTestAggregateRoot();
+        $aggregateRootProjection = \tests\EventSourcedTestAggregateRoot::makeNewEventSourcedTestAggregateRoot();
 
         \tests\EventSourcedTestAggregateRoot::applyThat(
             \ESFoundation\ES\DomainEventStream::wrap(
-                new \tests\TestEvent(new AggregateRootId($aggregateRootValues->getAggregateRootId()), ['first' => 'one'])
+                new \tests\TestEvent(new AggregateRootId($aggregateRootProjection->getAggregateRootId()), ['first' => 'one'])
             ),
-            $aggregateRootValues
+            $aggregateRootProjection
         );
 
-        $events = $aggregateRootValues->popUncommittedEvents();
+        $events = $aggregateRootProjection->popUncommittedEvents();
 
 
         $this->assertContainsOnly(\tests\TestEvent::class, $events);
@@ -56,17 +56,17 @@ class AggregateRootUnitTest extends TestCase
      */
     public function an_aggregate_root_validates_before_applying()
     {
-        $aggregateRootValues = \tests\EventSourcedTestAggregateRoot::makeNewEventSourcedTestAggregateRoot();
+        $aggregateRootProjection = \tests\EventSourcedTestAggregateRoot::makeNewEventSourcedTestAggregateRoot();
 
         try {
             \tests\EventSourcedTestAggregateRoot::applyThat(
                 \ESFoundation\ES\DomainEventStream::wrap(
-                    new \tests\TestEvent(new AggregateRootId($aggregateRootValues->getAggregateRootId()), ['first' => 'second'])
+                    new \tests\TestEvent(new AggregateRootId($aggregateRootProjection->getAggregateRootId()), ['first' => 'second'])
                 ),
-                $aggregateRootValues
+                $aggregateRootProjection
             );
         } catch (\ESFoundation\ES\Errors\FailedValidation $exception) {
-            $events = $aggregateRootValues->popUncommittedEvents();
+            $events = $aggregateRootProjection->popUncommittedEvents();
 
             $this->assertContainsOnly(\tests\TestEvent::class, $events);
             $this->assertCount(1, $events);
@@ -81,13 +81,13 @@ class AggregateRootUnitTest extends TestCase
      */
     public function an_aggregate_root_projection_is_serializable()
     {
-        $aggregateRootValues = \tests\EventSourcedTestAggregateRoot::makeNewEventSourcedTestAggregateRoot(collect(['first' => 'one','second' => 'two']));
-        $aggregateRootValues->popUncommittedEvents();
+        $aggregateRootProjection = \tests\EventSourcedTestAggregateRoot::makeNewEventSourcedTestAggregateRoot(collect(['first' => 'one','second' => 'two']));
+        $aggregateRootProjection->popUncommittedEvents();
 
-        $serialized = $aggregateRootValues->serialize();
+        $serialized = $aggregateRootProjection->serialize();
         $deserialized = AggregateRootProjection::deserialize($serialized);
 
-        $this->assertEquals($deserialized->first, $aggregateRootValues->first);
-        $this->assertEquals($deserialized->second, $aggregateRootValues->second);
+        $this->assertEquals($deserialized->first, $aggregateRootProjection->first);
+        $this->assertEquals($deserialized->second, $aggregateRootProjection->second);
     }
 }

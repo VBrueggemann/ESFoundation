@@ -77,7 +77,7 @@ class CreateAggregateRoot extends Command
 
         if ($this->option('projection') || $this->confirm("Do you want to create the corresponding AggregateRootProjection?")) {
             $this->call('make:aggregateRootProjection', [
-                '--name' => $this->option('name') . 'Values',
+                '--name' => $this->option('name') . 'Projection',
                 '--force' => $this->option('force')
             ]);
         }

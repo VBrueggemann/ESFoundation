@@ -13,7 +13,7 @@ use ESFoundation\ES\ValueObjects\AggregateRootProjection;
 class InMemoryCachingAggregateProjectionRepository implements AggregateProjectionRepository, EventListener
 {
     private $eventStore;
-    private $cachedAggregateValues = [];
+    private $cachedAggregateProjection = [];
 
     function __construct(EventStore $eventStore)
     {
@@ -31,8 +31,8 @@ class InMemoryCachingAggregateProjectionRepository implements AggregateProjectio
             return $aggregateRootClass::initialize($domainEventStream->take($playhead));
         }
 
-        if (key_exists($aggregateRootId->value, $this->cachedAggregateValues)) {
-            $cached = $this->cachedAggregateValues[$aggregateRootId->value];
+        if (key_exists($aggregateRootId->value, $this->cachedAggregateProjection)) {
+            $cached = $this->cachedAggregateProjection[$aggregateRootId->value];
             $unappliedEvents = $this->eventStore->get($aggregateRootId, $cached->getPlayhead() + 1);
             if ($unappliedEvents->isNotEmpty()) {
                 $aggregateRootClass::represent($unappliedEvents, $cached, false);
@@ -46,17 +46,17 @@ class InMemoryCachingAggregateProjectionRepository implements AggregateProjectio
             return null;
         }
 
-        $aggregateValues = $aggregateRootClass::initialize($domainEventStream);
-        $this->cachedAggregateValues[$aggregateRootId->value] = $aggregateValues;
-        return $aggregateValues->clone();
+        $aggregateProjection = $aggregateRootClass::initialize($domainEventStream);
+        $this->cachedAggregateProjection[$aggregateRootId->value] = $aggregateProjection;
+        return $aggregateProjection->clone();
     }
 
     public function handle(DomainEvent $domainEvent)
     {
         $aggregateRootId = $domainEvent->getAggregateRootId()->value;
 
-        if (key_exists($aggregateRootId, $this->cachedAggregateValues)) {
-            $cached = $this->cachedAggregateValues[$aggregateRootId];
+        if (key_exists($aggregateRootId, $this->cachedAggregateProjection)) {
+            $cached = $this->cachedAggregateProjection[$aggregateRootId];
             $aggregateRoot = $cached->getAggregateRoot();
             $aggregateRoot::represent(DomainEventStream::wrap($domainEvent), $cached, false);
         }

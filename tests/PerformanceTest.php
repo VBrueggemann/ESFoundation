@@ -2,7 +2,7 @@
 
 use ESFoundation\ES\ValueObjects\AggregateRootId;
 
-class PerformanceTest extends TestCase
+class PerformanceTest //extends TestCase
 {
     /**
      * test
@@ -433,7 +433,7 @@ class PerformanceTestAggregateRootValidator implements \ESFoundation\ES\Contract
     }
 }
 
-class PerformanceTestAggregateRootValues extends \ESFoundation\ES\ValueObjects\AggregateRootProjection {
+class PerformanceTestAggregateRootProjection extends \ESFoundation\ES\ValueObjects\AggregateRootProjection {
 
     public static function valueObjects(): \Illuminate\Support\Collection
     {

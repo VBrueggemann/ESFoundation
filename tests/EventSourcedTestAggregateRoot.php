@@ -13,12 +13,12 @@ class EventSourcedTestAggregateRoot extends EventSourcedAggregateRoot
     public static function makeNewEventSourcedTestAggregateRoot(Collection $payload = null)
     {
         $aggregateRootId = new AggregateRootId(Uuid::uuid4()->toString());
-        $values = new EventSourcedTestAggregateRootValues($aggregateRootId);
+        $values = new EventSourcedTestAggregateRootProjection($aggregateRootId);
         self::applyThat(DomainEventStream::wrap(new TestEvent($aggregateRootId, $payload)), $values);
         return $values;
     }
 
-    protected static function applyThatTestEvent(TestEvent $testEvent, EventSourcedTestAggregateRootValues $values)
+    protected static function applyThatTestEvent(TestEvent $testEvent, EventSourcedTestAggregateRootProjection $values)
     {
         if ($testEvent->first) {
             $values->put('first', $testEvent->first);

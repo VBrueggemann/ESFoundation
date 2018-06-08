@@ -4,10 +4,9 @@ namespace tests;
 
 use ESFoundation\ES\ValueObjects\AggregateRootProjection;
 use ESFoundation\ES\ValueObjects\TestValueObject;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
-class EventSourcedTestAggregateRootValues extends AggregateRootProjection
+class EventSourcedTestAggregateRootProjection extends AggregateRootProjection
 {
     public static function valueObjects(): Collection
     {

@@ -49,8 +49,8 @@ class RedisCachingAggregateProjectionRepository implements AggregateProjectionRe
             return null;
         }
 
-        $aggregateValues = $aggregateRootClass::initialize($domainEventStream);
-        $redis->set($aggregateRootId->value, $aggregateValues->serialize());
-        return $aggregateValues;
+        $aggregateProjection = $aggregateRootClass::initialize($domainEventStream);
+        $redis->set($aggregateRootId->value, $aggregateProjection->serialize());
+        return $aggregateProjection;
     }
 }

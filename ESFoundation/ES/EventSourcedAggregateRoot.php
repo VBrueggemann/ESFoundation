@@ -47,7 +47,7 @@ abstract class EventSourcedAggregateRoot implements AggregateRoot
     public static function initialize(DomainEventStream $domainEventStream, bool $withValidation = false): AggregateRootProjection
     {
         $self = get_called_class();
-        $className = $self . 'Values';
+        $className = $self . 'Projection';
         $aggregateRootProjection = new $className($domainEventStream->first()->getAggregateRootId());
 
         if ($withValidation){
